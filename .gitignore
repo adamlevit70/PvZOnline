@@ -1,0 +1,55 @@
+# Gradle files
+.gradle/
+build/
+**/build/
+
+# Local configuration file (SDK paths, etc.)
+local.properties
+
+# Log / OS files
+*.log
+.DS_Store
+Thumbs.db
+
+# Android Studio generated files and folders
+captures/
+.externalNativeBuild/
+.cxx/
+*.aab
+*.apk
+output-metadata.json
+output.json
+
+# IntelliJ / Android Studio project files
+*.iml
+.idea/
+misc.xml
+deploymentTargetDropDown.xml
+render.experimental.xml
+out/
+
+# Keystore files (DO NOT COMMIT)
+*.jks
+*.keystore
+
+# Google Services (Firebase)
+google-services.json
+
+# Android Profiling
+*.hprof
+
+# Kotlin/Java build outputs
+*.class
+*.jar
+*.war
+*.ear
+
+# NDK
+obj/
+
+# Jetpack Compose previews
+.preview/
+
+# Backup / tmp files
+*.orig
+*.tmp
