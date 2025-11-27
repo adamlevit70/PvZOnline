@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="RetroButton" parent="Widget.AppCompat.Button">
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:fontFamily">@font/alegreya_sans_sc_bold</item>
+        <item name="android:letterSpacing">0.15</item>
+        <item name="android:shadowColor">#000000</item>
+        <item name="android:shadowDx">1</item>
+        <item name="android:shadowDy">1</item>
+        <item name="android:shadowRadius">2</item>
+        <item name="android:background">@drawable/btn_retro_pressed</item> <!-- selector with pressed -->
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="RetroText">
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textSize">28sp</item> <!-- Bigger for title -->
+        <item name="android:fontFamily">@font/alegreya_sans_sc_bold</item>
+        <item name="android:letterSpacing">0.15</item>
+        <item name="android:shadowColor">#000000</item>
+        <item name="android:shadowDx">1</item>
+        <item name="android:shadowDy">1</item>
+        <item name="android:shadowRadius">2</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+
+</resources>
