@@ -1,16 +1,23 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mainLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-
-    android:background="@drawable/game_board"
-    android:gravity="center"
     android:orientation="vertical"
+    android:gravity="center"
+    android:background="@drawable/game_board">
 
-    tools:context=".GameActivity">
-
-
+    <GridLayout
+        android:id="@+id/gameBoard"
+        android:layout_width="600dp"
+        android:layout_height="270dp"
+        android:columnCount="9"
+        android:rowCount="5"
+        android:layout_marginStart="80dp"
+        android:layout_marginTop="100dp"
+        android:alignmentMode="alignMargins"
+        android:rowOrderPreserved="false"
+        android:useDefaultMargins="true">
+        <!-- Tiles will be added programmatically -->
+    </GridLayout>
 </LinearLayout>
