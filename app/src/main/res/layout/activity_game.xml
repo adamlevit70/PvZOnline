@@ -9,15 +9,17 @@
 
     <GridLayout
         android:id="@+id/gameBoard"
-        android:layout_width="600dp"
+        android:layout_width="630dp"
         android:layout_height="270dp"
         android:columnCount="9"
         android:rowCount="5"
-        android:layout_marginStart="80dp"
-        android:layout_marginTop="100dp"
+        android:layout_marginStart="70dp"
+        android:layout_marginTop="110dp"
         android:alignmentMode="alignMargins"
         android:rowOrderPreserved="false"
-        android:useDefaultMargins="true">
+        android:useDefaultMargins="true"
+        android:rotation="0"
+        android:translationX="20dp">
         <!-- Tiles will be added programmatically -->
     </GridLayout>
 </LinearLayout>

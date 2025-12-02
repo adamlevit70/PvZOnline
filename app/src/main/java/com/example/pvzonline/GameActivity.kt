@@ -28,8 +28,8 @@ class GameActivity : AppCompatActivity() {
             val boardWidth = gameBoard.width
             val boardHeight = gameBoard.height
 
-            val tileWidth = boardWidth / cols
             val tileHeight = boardHeight / rows
+            val tileWidth = boardWidth / cols - 10
 
             for (row in 0 until rows) {
                 for (col in 0 until cols) {
@@ -37,8 +37,10 @@ class GameActivity : AppCompatActivity() {
                         layoutParams = GridLayout.LayoutParams().apply {
                             width = tileWidth
                             height = tileHeight
+                            translationX = (90f - (row * 18))
                             setMargins(2, 2, 2, 2) // optional spacing between tiles
                         }
+
                         setBackgroundColor(Color.parseColor("#88AAAAAA")) // placeholder color
                         setOnClickListener {
                             setBackgroundColor(Color.parseColor("#33FF33")) // temporary plant
