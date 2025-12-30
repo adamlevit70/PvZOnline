@@ -1,4 +1,4 @@
-<LinearLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/mainLayout"
     android:layout_width="match_parent"
@@ -8,6 +8,7 @@
     android:background="@drawable/game_board">
 
     <GridLayout
+        android:layout_gravity="center_horizontal"
         android:id="@+id/gameBoard"
         android:layout_width="630dp"
         android:layout_height="270dp"
@@ -22,4 +23,11 @@
         android:translationX="20dp">
         <!-- Tiles will be added programmatically -->
     </GridLayout>
-</LinearLayout>
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="200dp"
+        android:src="@drawable/regular_zombie"
+        android:id="@+id/zombie"/>
+
+</FrameLayout>
