@@ -1,55 +1,49 @@
 package com.example.pvzonline
 
 import android.animation.ObjectAnimator
-import android.animation.TimeInterpolator
-import android.graphics.Color
 import android.os.Bundle
-import android.view.View
 import android.view.animation.LinearInterpolator
 import android.widget.FrameLayout
 import android.widget.GridLayout
 import android.widget.ImageView
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 
 class GameActivity : AppCompatActivity() {
 
     private val rows = 5
     private val cols = 9
     private lateinit var gameBoard: GridLayout
-    private lateinit var zombie: ImageView
+    private lateinit var mainLayout: FrameLayout
+    private val zombies = mutableListOf<ImageView>()
+    private val plantMatrix = Array(rows) { arrayOfNulls<ImageView>(cols) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game)
 
-        gameBoard = findViewById<GridLayout>(R.id.gameBoard)
-        zombie = findViewById<ImageView>(R.id.zombie)
+        gameBoard = findViewById(R.id.gameBoard)
+        mainLayout = findViewById(R.id.mainLayout)
+
         createBoard()
     }
 
     private fun createBoard() {
         gameBoard.post {
-
             val boardWidth = gameBoard.width
             val boardHeight = gameBoard.height
 
             val tileHeight = boardHeight / rows
             val tileWidth = boardWidth / cols - 10
 
+            // --- ADD PLANT TILES ---
             for (row in 0 until rows) {
                 for (col in 0 until cols) {
-
-                    // Inflate tile layout (with ImageView inside)
                     val tile = layoutInflater.inflate(
                         R.layout.tile,
                         gameBoard,
                         false
                     ) as FrameLayout
 
-                    // Your original width/height + margins
                     tile.layoutParams = GridLayout.LayoutParams().apply {
                         width = tileWidth
                         height = tileHeight
@@ -57,40 +51,70 @@ class GameActivity : AppCompatActivity() {
                     }
 
                     // Move tiles to be exactly as the board
-                    tile.translationX = (100f - (row * 20) + row)
+                    tile.translationX = (100f - (row * 20))
 
-                    // The image that will show the sprite
                     val plantImage = tile.findViewById<ImageView>(R.id.plantImage)
-
                     tile.setOnClickListener {
-                        placePlant(plantImage)
+                        placePlant(plantImage, row, col)
                     }
 
                     gameBoard.addView(tile)
                 }
             }
+
+            // --- SPAWN ZOMBIE AFTER BOARD IS READY ---
+            spawnZombie(row = 2, tileWidth = tileWidth, tileHeight = tileHeight)
         }
-
-        startGameLoop()
     }
 
-    private fun placePlant(plantImage: ImageView) {
-        plantImage.setImageResource(R.drawable.plant_peashooter) // plant sprite
+
+    private fun placePlant(plantImage: ImageView, row: Int, col: Int) {
+        plantImage.setImageResource(R.drawable.plant_peashooter)
         plantImage.visibility = ImageView.VISIBLE
+
+        // Save the plant in the matrix
+        plantMatrix[row][col] = plantImage
     }
 
-    private fun startGameLoop() {
-        // Move the ImageView horizontally
-        val animator = ObjectAnimator.ofFloat(zombie, "translationX", 0f, -500f) // X-axis movement
 
-        animator.duration = 5000 // Duration in milliseconds
-        animator.interpolator = LinearInterpolator() // Move in constant speed (not smooth)
+    private fun spawnZombie(row: Int, tileWidth: Int, tileHeight: Int) {
+        val zombie = ImageView(this)
+        zombie.setImageResource(R.drawable.regular_zombie)
+        zombie.scaleType = ImageView.ScaleType.FIT_CENTER
 
-        //animator.interpolator = TimeInterpolator { input ->
-            //(input * 50).toInt() / 50f   // 50 steps
-        //}
+        // Make zombie 2x bigger than tile
+        val zombieWidth = tileWidth * 2
+        val zombieHeight = tileHeight * 2
+        zombie.layoutParams = FrameLayout.LayoutParams(zombieWidth, zombieHeight)
 
-        // Start the animation
-        animator.start()
+        mainLayout.addView(zombie)
+        zombies.add(zombie)
+
+        zombie.post {
+            val tileIndex = row * cols
+            val tile = gameBoard.getChildAt(tileIndex)
+
+            // Align zombie’s feet with bottom of tile row
+            zombie.y = tile.y + tileHeight - (zombieHeight / 3)
+
+            // Start off-screen right
+            zombie.x = gameBoard.x + gameBoard.width.toFloat()
+
+            // --- MOVE ZOMBIE MANUALLY FRAME-BY-FRAME ---
+            val speed = 5f // pixels per frame
+            zombie.post(object : Runnable {
+                override fun run() {
+                    if(zombie.x % gameBoard.width == 0f) {
+                        println("A MATCH!!!!!!")
+                    }
+
+                    // Move zombie left
+                    zombie.x -= speed
+
+                    // Continue next frame
+                    zombie.postDelayed(this, 16) // ~60 FPS
+                }
+            })
+        }
     }
 }

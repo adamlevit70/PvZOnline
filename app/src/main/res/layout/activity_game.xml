@@ -4,7 +4,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center"
     android:background="@drawable/game_board">
 
     <GridLayout
@@ -14,20 +13,13 @@
         android:layout_height="270dp"
         android:columnCount="9"
         android:rowCount="5"
-        android:layout_marginStart="66dp"
-        android:layout_marginTop="105dp"
+        android:layout_marginStart="86dp"
+        android:layout_marginTop="115dp"
         android:alignmentMode="alignMargins"
         android:rowOrderPreserved="false"
         android:useDefaultMargins="true"
-        android:rotation="0"
-        android:translationX="20dp">
+>
         <!-- Tiles will be added programmatically -->
     </GridLayout>
-
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="200dp"
-        android:src="@drawable/regular_zombie"
-        android:id="@+id/zombie"/>
 
 </FrameLayout>
