@@ -16,17 +16,22 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Plants Vs. Zombies Online"
+        android:text="Plants Vs. Zombies"
+        android:textAlignment="center"
         style="@style/RetroText"
-        android:textSize="40sp"
+        android:textSize="30dp"
         android:layout_gravity="center_horizontal"
-        android:paddingTop="16dp"/>
+        />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Online"
+        android:textAlignment="center"
+        style="@style/RetroText"
+        android:textSize="20dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="20dp" />
 
-    <!-- Spacer to push buttons lower -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"/>
 
     <!-- Host game button -->
     <androidx.appcompat.widget.AppCompatButton
