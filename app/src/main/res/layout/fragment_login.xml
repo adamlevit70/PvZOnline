@@ -2,41 +2,51 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-
-    android:gravity="center"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:gravity="center"
+    android:paddingHorizontal="64dp">
 
+    <!-- Title -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Return to the battle for the garden!"
-        android:textSize="20dp"
-        android:layout_marginBottom="20dp"
+        style="@style/RetroText"
+        android:text="Welcome Back"
+        android:layout_marginBottom="10dp"
         android:textAlignment="center" />
 
+    <!-- Email -->
     <EditText
         android:id="@+id/emailInputLogin"
-        android:hint="Email"
-        android:layout_width="400dp"
+        style="@style/RetroInput"
+        android:textColorHint="#d4d4d4"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAlignment="center"
-        android:inputType="textEmailAddress" />
+        android:hint="Email"
+        android:inputType="textEmailAddress"
+        android:textAlignment="center" />
 
+    <!-- Password -->
     <EditText
         android:id="@+id/passwordInputLogin"
-        android:hint="Password"
-        android:layout_width="400dp"
+        style="@style/RetroInput"
+        android:textColorHint="#d4d4d4"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:hint="Password"
+        android:inputType="textPassword"
         android:textAlignment="center"
-        android:inputType="textPassword" />
+        android:layout_marginBottom="3dp" />
 
+    <!-- Login Button -->
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/loginButton"
+        style="@style/RetroButton"
+        android:layout_width="200dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="16dp"
         android:text="Login"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        style="@style/RetroButton"/>
+        android:textSize="15dp" />
+
 </LinearLayout>

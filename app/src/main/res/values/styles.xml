@@ -30,4 +30,12 @@
         <item name="android:textAllCaps">true</item>
     </style>
 
+    <style name="RetroInput">
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:fontFamily">@font/alegreya_sans_sc_bold</item>
+        <item name="android:letterSpacing">0.05</item>
+        <item name="android:shadowRadius">0</item>
+    </style>
+
 </resources>

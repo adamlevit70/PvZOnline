@@ -2,49 +2,73 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-
-    android:gravity="center"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:gravity="center"
+    android:paddingHorizontal="64dp">
 
+    <!-- Title -->
     <TextView
+        android:id="@+id/registerTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Create your first garden and beat those zombies!"
-        android:textSize="20dp"
-        android:layout_marginBottom="20dp"
+        style="@style/RetroText"
+        android:text="Join the Garden War"
+        android:layout_marginBottom="10dp"
         android:textAlignment="center" />
 
+    <!-- Email -->
     <EditText
         android:id="@+id/emailInputRegister"
-        android:hint="Email"
-        android:layout_width="400dp"
+        style="@style/RetroInput"
+        android:textColorHint="#d4d4d4"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAlignment="center"
-        android:inputType="textEmailAddress" />
+        android:hint="Email"
+        android:inputType="textEmailAddress"
+        android:textAlignment="center" />
 
+    <!-- Username -->
     <EditText
         android:id="@+id/usernameInputRegister"
-        android:hint="Username"
-        android:layout_width="400dp"
+        style="@style/RetroInput"
+        android:textColorHint="#d4d4d4"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:hint="Username"
         android:textAlignment="center"
+        android:layout_marginBottom="3dp"
         android:inputType="text" />
 
+    <!-- Password -->
     <EditText
         android:id="@+id/passwordInputRegister"
-        android:hint="Password"
-        android:layout_width="400dp"
+        style="@style/RetroInput"
+        android:textColorHint="#d4d4d4"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAlignment="center"
-        android:inputType="textPassword" />
+        android:hint="Password"
+        android:inputType="textPassword"
+        android:textAlignment="center" />
 
+    <!-- Confirm Password -->
+    <EditText
+        android:id="@+id/passwordConfirmInputRegister"
+        style="@style/RetroInput"
+        android:textColorHint="#d4d4d4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Confirm Password"
+        android:inputType="textPassword"
+        android:textAlignment="center" />
+
+    <!-- Register Button -->
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/registerButton"
+        style="@style/RetroButton"
+        android:layout_width="200dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="16dp"
         android:text="Register"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        style="@style/RetroButton"/>
+        android:textSize="15dp" />
 </LinearLayout>
