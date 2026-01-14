@@ -2,15 +2,11 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-
     android:gravity="center"
     android:orientation="vertical"
-    android:background="@drawable/game_board"
-
-    tools:context=".MainActivity">
+    tools:context=".HomeFragment">
 
     <!-- Title at top -->
     <TextView
@@ -32,7 +28,6 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="20dp" />
 
-
     <!-- Host game button -->
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnStartGame"
@@ -40,7 +35,5 @@
         android:layout_height="wrap_content"
         android:text="START GAME"
         style="@style/RetroButton" />
-
-
 
 </LinearLayout>

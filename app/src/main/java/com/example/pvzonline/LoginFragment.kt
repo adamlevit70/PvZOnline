@@ -15,9 +15,9 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
         val emailInput = view.findViewById<EditText>(R.id.emailInputLogin)
         val passwordInput = view.findViewById<EditText>(R.id.passwordInputLogin)
-        val loginButton = view.findViewById<Button>(R.id.loginButton)
+        val loginBtn = view.findViewById<Button>(R.id.loginBtn)
 
-        loginButton.setOnClickListener {
+        loginBtn.setOnClickListener {
             val email = emailInput.text.toString().trim()
             val password = passwordInput.text.toString().trim()
 
@@ -26,15 +26,20 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
     }
 
     private fun onLoginClicked(email: String, password: String) {
+
+        // Built for testing
+        (activity as? AuthActivity)?.loginUser("a@gmail.com", "123456")
+
+        /*
         // Check if email and username fields are filled
         if(email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this.context, "Please enter all fields", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Please enter all fields", Toast.LENGTH_SHORT).show()
             return
         }
 
         // Password validation
         if(password.length < 6) {
-            Toast.makeText(this.context, "Password must be at least 6 characters long", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Password must be at least 6 characters long", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -43,8 +48,9 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
             (activity as? AuthActivity)?.loginUser(email, password)
         }
         else {
-            Toast.makeText(this.context, "Please enter a valid email", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Please enter a valid email", Toast.LENGTH_SHORT).show()
             return
         }
+         */
     }
 }

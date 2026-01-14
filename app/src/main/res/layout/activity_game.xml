@@ -8,7 +8,7 @@
 
     <GridLayout
         android:layout_gravity="center_horizontal"
-        android:id="@+id/gameBoard"
+        android:id="@+id/gameBoardGrid"
         android:layout_width="630dp"
         android:layout_height="270dp"
         android:columnCount="9"

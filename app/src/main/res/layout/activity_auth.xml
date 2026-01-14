@@ -23,14 +23,14 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp">
         <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/changeToLoginFragment"
+            android:id="@+id/changeToLoginBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Login"
             style="@style/RetroButton"
             android:layout_marginHorizontal="10dp"/>
         <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/changeToRegisterFragment"
+            android:id="@+id/changeToRegisterBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Register"

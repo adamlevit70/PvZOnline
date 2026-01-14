@@ -1,0 +1,14 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Icons used under license from Flaticon (www.flaticon.com) -->
+    <item
+        android:id="@+id/nav_home"
+        android:icon="@drawable/ic_home"
+        android:title="Home" />
+
+    <item
+        android:id="@+id/nav_user_details"
+        android:icon="@drawable/ic_user"
+        android:title="User Details" />
+
+</menu>

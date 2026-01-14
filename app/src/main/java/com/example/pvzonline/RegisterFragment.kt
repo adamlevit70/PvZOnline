@@ -16,9 +16,9 @@ class RegisterFragment : Fragment(R.layout.fragment_register) {
         val usernameInput = view.findViewById<EditText>(R.id.usernameInputRegister)
         val passwordInput = view.findViewById<EditText>(R.id.passwordInputRegister)
         val passwordConfirmInput = view.findViewById<EditText>(R.id.passwordConfirmInputRegister)
-        val registerButton = view.findViewById<Button>(R.id.registerButton)
+        val registerBtn = view.findViewById<Button>(R.id.registerBtn)
 
-        registerButton.setOnClickListener {
+        registerBtn.setOnClickListener {
             val email = emailInput.text.toString().trim()
             val username = usernameInput.text.toString().trim()
             val password = passwordInput.text.toString().trim()
@@ -31,16 +31,16 @@ class RegisterFragment : Fragment(R.layout.fragment_register) {
     private fun onRegisterClicked(email: String, username: String, password: String, confirmPassword : String) {
         // Check if email and username fields are filled
         if(email.isEmpty() || username.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
-            Toast.makeText(this.context, "Please enter all fields", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Please enter all fields", Toast.LENGTH_SHORT).show()
             return
         }
 
         // Password validation
         if(password != confirmPassword) {
-            Toast.makeText(this.context, "Passwords do not match", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Passwords do not match", Toast.LENGTH_SHORT).show()
         }
         if(password.length < 6) {
-            Toast.makeText(this.context, "Password must be at least 6 characters long", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Password must be at least 6 characters long", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -49,7 +49,7 @@ class RegisterFragment : Fragment(R.layout.fragment_register) {
             (activity as? AuthActivity)?.registerUser(email, username, password)
         }
         else {
-            Toast.makeText(this.context, "Please enter a valid email", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Please enter a valid email", Toast.LENGTH_SHORT).show()
             return
         }
     }

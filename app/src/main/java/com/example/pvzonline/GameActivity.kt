@@ -6,13 +6,14 @@ import android.view.animation.LinearInterpolator
 import android.widget.FrameLayout
 import android.widget.GridLayout
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
 class GameActivity : AppCompatActivity() {
 
     private val rows = 5
     private val cols = 9
-    private lateinit var gameBoard: GridLayout
+    private lateinit var gameBoardGrid: GridLayout
     private lateinit var mainLayout: FrameLayout
     private val zombies = mutableListOf<ImageView>()
     private val plantMatrix = Array(rows) { arrayOfNulls<ImageView>(cols) }
@@ -21,16 +22,16 @@ class GameActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game)
 
-        gameBoard = findViewById(R.id.gameBoard)
+        gameBoardGrid = findViewById(R.id.gameBoardGrid)
         mainLayout = findViewById(R.id.mainLayout)
 
         createBoard()
     }
 
     private fun createBoard() {
-        gameBoard.post {
-            val boardWidth = gameBoard.width
-            val boardHeight = gameBoard.height
+        gameBoardGrid.post {
+            val boardWidth = gameBoardGrid.width
+            val boardHeight = gameBoardGrid.height
 
             val tileHeight = boardHeight / rows
             val tileWidth = boardWidth / cols - 10
@@ -40,7 +41,7 @@ class GameActivity : AppCompatActivity() {
                 for (col in 0 until cols) {
                     val tile = layoutInflater.inflate(
                         R.layout.tile,
-                        gameBoard,
+                        gameBoardGrid,
                         false
                     ) as FrameLayout
 
@@ -58,7 +59,7 @@ class GameActivity : AppCompatActivity() {
                         placePlant(plantImage, row, col)
                     }
 
-                    gameBoard.addView(tile)
+                    gameBoardGrid.addView(tile)
                 }
             }
 
@@ -92,29 +93,46 @@ class GameActivity : AppCompatActivity() {
 
         zombie.post {
             val tileIndex = row * cols
-            val tile = gameBoard.getChildAt(tileIndex)
+            val tile = gameBoardGrid.getChildAt(tileIndex)
 
             // Align zombie’s feet with bottom of tile row
             zombie.y = tile.y + tileHeight - (zombieHeight / 3)
 
             // Start off-screen right
-            zombie.x = gameBoard.x + gameBoard.width.toFloat()
+            zombie.x = gameBoardGrid.x + gameBoardGrid.width.toFloat()
+
+            var lastTileCol = -1
 
             // --- MOVE ZOMBIE MANUALLY FRAME-BY-FRAME ---
-            val speed = 5f // pixels per frame
+            var speed = 5f // pixels per frame
             zombie.post(object : Runnable {
                 override fun run() {
-                    if(zombie.x % gameBoard.width == 0f) {
-                        println("A MATCH!!!!!!")
-                    }
-
                     // Move zombie left
                     zombie.x -= speed
+
+                    // Convert to grid-local X
+                    val zombieGridX = zombie.x - gameBoardGrid.x
+
+                    if (zombieGridX >= 0) {
+                        val currentCol = (zombieGridX / tileWidth).toInt()
+                        println("currentCol: $currentCol, row: $row, speed: $speed")
+                        if (currentCol in 0 until cols && currentCol != lastTileCol) {
+                            lastTileCol = currentCol
+                            println("Got to a plant")
+                            if (plantMatrix[row-1][currentCol] != null) {
+                                speed = 0f
+                            }
+                        }
+                    }
 
                     // Continue next frame
                     zombie.postDelayed(this, 16) // ~60 FPS
                 }
             })
         }
+    }
+
+    private fun kobi() {
+        Toast.makeText(this, "MATCH", Toast.LENGTH_SHORT).show()
     }
 }

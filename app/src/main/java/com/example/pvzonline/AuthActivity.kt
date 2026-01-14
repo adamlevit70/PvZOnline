@@ -25,13 +25,13 @@ class AuthActivity : AppCompatActivity() {
             insets
         }
 
-        val changeToRegisterButton = findViewById<Button>(R.id.changeToRegisterFragment)
-        val changeToLoginButton = findViewById<Button>(R.id.changeToLoginFragment)
+        val changeToRegisterBtn = findViewById<Button>(R.id.changeToRegisterBtn)
+        val changeToLoginBtn = findViewById<Button>(R.id.changeToLoginBtn)
 
-        changeToRegisterButton.setOnClickListener {
+        changeToRegisterBtn.setOnClickListener {
             changeToRegisterFragment()
         }
-        changeToLoginButton.setOnClickListener {
+        changeToLoginBtn.setOnClickListener {
             changeToLoginFragment()
         }
     }
@@ -60,8 +60,8 @@ class AuthActivity : AppCompatActivity() {
                             .addOnSuccessListener {
                                 Toast.makeText(this, "User created successfully", Toast.LENGTH_LONG).show()
 
-                                val mainActivityIntent = Intent(this, MainActivity::class.java)
-                                startActivity(mainActivityIntent)
+                                val navigationActivityIntent = Intent(this, NavigationActivity::class.java)
+                                startActivity(navigationActivityIntent)
                             }
                             .addOnFailureListener {
                                 Toast.makeText(this, "Failed to save user data", Toast.LENGTH_SHORT).show()
@@ -83,13 +83,13 @@ class AuthActivity : AppCompatActivity() {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if(task.isSuccessful) {
-                    Toast.makeText(this, "Login successful", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show()
 
-                    val mainActivityIntent = Intent(this, MainActivity::class.java)
-                    startActivity(mainActivityIntent)
+                    val navigationActivityIntent = Intent(this, NavigationActivity::class.java)
+                    startActivity(navigationActivityIntent)
                 }
                 else {
-                    Toast.makeText(this, "Failed to login", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "Failed to login", Toast.LENGTH_SHORT).show()
                 }
             }
     }
