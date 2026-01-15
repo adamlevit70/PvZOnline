@@ -15,8 +15,7 @@ class GameActivity : AppCompatActivity() {
     private val cols = 9
     private lateinit var gameBoardGrid: GridLayout
     private lateinit var mainLayout: FrameLayout
-    private val zombies = mutableListOf<ImageView>()
-    private val plantMatrix = Array(rows) { arrayOfNulls<ImageView>(cols) }
+    private val plantMatrix = Array(rows) { arrayOfNulls<Plant>(cols) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,60 +72,66 @@ class GameActivity : AppCompatActivity() {
         plantImage.setImageResource(R.drawable.plant_peashooter)
         plantImage.visibility = ImageView.VISIBLE
 
+        val newPlant = Plant(plantImage, 2, 2f, 100)
+
         // Save the plant in the matrix
-        plantMatrix[row][col] = plantImage
+        plantMatrix[row][col] = newPlant
     }
 
 
     private fun spawnZombie(row: Int, tileWidth: Int, tileHeight: Int) {
-        val zombie = ImageView(this)
-        zombie.setImageResource(R.drawable.regular_zombie)
-        zombie.scaleType = ImageView.ScaleType.FIT_CENTER
+        val zombieImage = ImageView(this)
+        zombieImage.setImageResource(R.drawable.regular_zombie)
+        zombieImage.scaleType = ImageView.ScaleType.FIT_CENTER
 
         // Make zombie 2x bigger than tile
         val zombieWidth = tileWidth * 2
         val zombieHeight = tileHeight * 2
-        zombie.layoutParams = FrameLayout.LayoutParams(zombieWidth, zombieHeight)
+        zombieImage.layoutParams = FrameLayout.LayoutParams(zombieWidth, zombieHeight)
 
-        mainLayout.addView(zombie)
-        zombies.add(zombie)
+        mainLayout.addView(zombieImage)
 
-        zombie.post {
-            val tileIndex = row * cols
+        val zombie : Zombie = Zombie(zombieImage, 3f, 1f, 100)
+
+        zombieImage.post {
+            val tileIndex = (row+1) * cols
             val tile = gameBoardGrid.getChildAt(tileIndex)
 
             // Align zombie’s feet with bottom of tile row
-            zombie.y = tile.y + tileHeight - (zombieHeight / 3)
+            zombieImage.y = tile.y + tileHeight - (zombieHeight / 3)
 
             // Start off-screen right
-            zombie.x = gameBoardGrid.x + gameBoardGrid.width.toFloat()
+            zombieImage.x = gameBoardGrid.x + gameBoardGrid.width.toFloat()
 
             var lastTileCol = -1
 
             // --- MOVE ZOMBIE MANUALLY FRAME-BY-FRAME ---
             var speed = 5f // pixels per frame
-            zombie.post(object : Runnable {
+            zombieImage.post(object : Runnable {
                 override fun run() {
                     // Move zombie left
-                    zombie.x -= speed
+                    zombieImage.x -= speed
 
                     // Convert to grid-local X
-                    val zombieGridX = zombie.x - gameBoardGrid.x
+                    val zombieGridX = zombieImage.x - gameBoardGrid.x
 
                     if (zombieGridX >= 0) {
                         val currentCol = (zombieGridX / tileWidth).toInt()
-                        println("currentCol: $currentCol, row: $row, speed: $speed")
                         if (currentCol in 0 until cols && currentCol != lastTileCol) {
                             lastTileCol = currentCol
-                            println("Got to a plant")
-                            if (plantMatrix[row-1][currentCol] != null) {
+                            val currentPlant : Plant? = plantMatrix[row][currentCol]
+
+                            if (currentPlant != null) {
                                 speed = 0f
+                                currentPlant.takeDmg(100)
+                                plantMatrix[row][currentCol] = null // The plant is dead, remove from matrix
+                                zombieImage.postDelayed(this, 1000)  // Cooldown for attack
                             }
                         }
                     }
 
                     // Continue next frame
-                    zombie.postDelayed(this, 16) // ~60 FPS
+                    zombieImage.postDelayed(this, 16) // ~60 FPS
                 }
             })
         }
