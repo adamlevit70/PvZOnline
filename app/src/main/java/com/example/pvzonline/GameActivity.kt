@@ -1,6 +1,7 @@
 package com.example.pvzonline
 
 import android.animation.ObjectAnimator
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.animation.LinearInterpolator
 import android.widget.FrameLayout
@@ -19,6 +20,7 @@ class GameActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         setContentView(R.layout.activity_game)
 
         gameBoardGrid = findViewById(R.id.gameBoardGrid)
@@ -64,6 +66,8 @@ class GameActivity : AppCompatActivity() {
 
             // --- SPAWN ZOMBIE AFTER BOARD IS READY ---
             spawnZombie(row = 2, tileWidth = tileWidth, tileHeight = tileHeight)
+            spawnZombie(row = 0, tileWidth = tileWidth, tileHeight = tileHeight)
+            spawnZombie(row = 1, tileWidth = tileWidth, tileHeight = tileHeight)
         }
     }
 
@@ -105,39 +109,67 @@ class GameActivity : AppCompatActivity() {
 
             var lastTileCol = -1
 
-            // --- MOVE ZOMBIE MANUALLY FRAME-BY-FRAME ---
-            var speed = 5f // pixels per frame
+            var speed = zombie.speed
+            var isAttacking = false
+
             zombieImage.post(object : Runnable {
                 override fun run() {
-                    // Move zombie left
-                    zombieImage.x -= speed
+                    if(!isAttacking) {
+                        // Move zombie
+                        zombieImage.x -= speed
+                    }
 
-                    // Convert to grid-local X
-                    val zombieGridX = zombieImage.x - gameBoardGrid.x
+                    val attackX = zombieImage.x + zombieWidth * 0.25f
+                    val gridX = attackX - gameBoardGrid.x
 
-                    if (zombieGridX >= 0) {
-                        val currentCol = (zombieGridX / tileWidth).toInt()
-                        if (currentCol in 0 until cols && currentCol != lastTileCol) {
-                            lastTileCol = currentCol
-                            val currentPlant : Plant? = plantMatrix[row][currentCol]
+                    if (gridX in 0f..gameBoardGrid.width.toFloat()) {
+                        val col = (gridX / tileWidth).toInt()
 
-                            if (currentPlant != null) {
+                        if (col in 0 until cols) {
+                            val plant = plantMatrix[row][col]
+
+                            if (plant != null) {
                                 speed = 0f
-                                currentPlant.takeDmg(100)
-                                plantMatrix[row][currentCol] = null // The plant is dead, remove from matrix
-                                zombieImage.postDelayed(this, 1000)  // Cooldown for attack
+
+                                if (!isAttacking) {
+                                    isAttacking = true
+
+                                    zombieImage.postDelayed({
+                                        plant.takeDmg(50)
+
+                                        if (plant.hp <= 0) {
+                                            plantMatrix[row][col] = null
+                                        }
+                                        isAttacking = false
+                                        speed = zombie.speed
+                                    }, 500)
+                                }
                             }
                         }
                     }
 
-                    // Continue next frame
-                    zombieImage.postDelayed(this, 16) // ~60 FPS
+                    zombieImage.postDelayed(this, 16)
                 }
             })
+
+
+            /*
+            We can do this instead of the nested post:
+            zombieImage.post { // only once, for layout positioning
+    // set zombieImage.x/y
+    startZombieLoop()
+}
+
+private fun startZombieLoop() {
+    val runnable = object : Runnable {
+        override fun run() {
+            // move zombie, check collisions
+            zombieImage.postDelayed(this, 16)
         }
     }
-
-    private fun kobi() {
-        Toast.makeText(this, "MATCH", Toast.LENGTH_SHORT).show()
+    zombieImage.post(runnable)
+}
+             */
+        }
     }
 }
