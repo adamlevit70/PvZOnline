@@ -3,7 +3,7 @@ package com.example.pvzonline
 import android.widget.ImageView
 
 class Zombie(
-    zombieImage: ImageView,
+    val zombieImage: ImageView,
     val speed: Float,
     cooldown: Float,
     hp: Int
@@ -11,6 +11,6 @@ class Zombie(
 
     override fun dead() {
         println("ZOMBIE DEAD")
-        this.image.visibility = ImageView.GONE
+        //this.image.visibility = ImageView.GONE
     }
 }
