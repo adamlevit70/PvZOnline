@@ -19,4 +19,8 @@ open class LivingEntity(
     open fun dead() {
         println("DEAD")
     }
+
+    open fun isDead() : Boolean {
+        return hp <= 0
+    }
 }

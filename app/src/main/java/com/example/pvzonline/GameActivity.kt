@@ -9,6 +9,9 @@ import android.widget.GridLayout
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.Queue
 
 class GameActivity : AppCompatActivity() {
@@ -69,21 +72,33 @@ class GameActivity : AppCompatActivity() {
             }
 
             // --- SPAWN ZOMBIE AFTER BOARD IS READY ---
-            spawnZombie(row = 2)
-            spawnZombie(row = 0)
-            spawnZombie(row = 1)
+            startZombieSpawnGeneration()
         }
     }
 
+    private fun startZombieSpawnGeneration() {
+        lifecycleScope.launch {
+            while(true) {
+                val spawnDelay = (2000..3000).random()
+                val spawnRow = (0..4).random()
+                delay(spawnDelay.toLong())
+                spawnZombie(spawnRow)
+            }
+        }
+    }
 
     private fun placePlant(plantImage: ImageView, row: Int, col: Int) {
-        plantImage.setImageResource(R.drawable.plant_peashooter)
-        plantImage.visibility = ImageView.VISIBLE
+        // Place plant on tile only if available
+        if(plantMatrix[row][col] == null) {
+            plantImage.setImageResource(R.drawable.plant_peashooter)
+            plantImage.visibility = ImageView.VISIBLE
 
-        val newPlant = Plant(plantImage, 2, 2f, 100)
+            val newPlant = Plant(plantImage, 2, 2f, 100)
 
-        // Save the plant in the matrix
-        plantMatrix[row][col] = newPlant
+            // Save the plant in the matrix
+            plantMatrix[row][col] = newPlant
+        }
+
     }
 
 
@@ -104,11 +119,11 @@ class GameActivity : AppCompatActivity() {
 
         // Wait for layout only to position the zombie
         zombieImage.post {
-            val tileIndex = (row + 1) * cols
+            val tileIndex = row * cols
             val tile = gameBoardGrid.getChildAt(tileIndex)
 
             // Align zombie to row
-            zombieImage.y = tile.y + tileHeight - (zombieImage.height / 3)
+            zombieImage.y = tile.y + tileHeight + (zombieImage.height / 5)
             zombieImage.x = gameBoardGrid.x + gameBoardGrid.width.toFloat()
 
             // Start movement + attack loop

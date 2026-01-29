@@ -11,6 +11,5 @@ class Zombie(
 
     override fun dead() {
         println("ZOMBIE DEAD")
-        //this.image.visibility = ImageView.GONE
     }
 }

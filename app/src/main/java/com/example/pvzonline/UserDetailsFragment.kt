@@ -33,6 +33,10 @@ class UserDetailsFragment : Fragment() {
         val changeUsernameInput = view.findViewById<EditText>(R.id.changeUsernameInput)
         val saveChangesBtn = view.findViewById<Button>(R.id.saveChangesBtn)
 
+        // Initialize values
+        var level : Int = 0
+        var xp : Int = 0
+
         val auth = FirebaseAuth.getInstance()
         val user = auth.currentUser
         userEmail.text = user!!.email.toString()
@@ -40,18 +44,20 @@ class UserDetailsFragment : Fragment() {
 
         db.collection("users").document(user.uid).get().addOnSuccessListener {
             val myUser = it.toObject(MyUser::class.java)
-            userLevel.text = "Level: " + myUser!!.level.toString()
-            userXp.text = "XP: " + myUser!!.xp.toString()
+
+            level = myUser!!.level
+            xp = myUser!!.xp
+
+            userLevel.text = "Level: " + level.toString()
+            userXp.text = "XP: " + xp.toString()
             changeUsernameInput.setText(myUser!!.username)
         }
 
         saveChangesBtn.setOnClickListener {
-            val level = userLevel.text.toString()
-            val xp = userXp.text.toString()
             val username = changeUsernameInput.text.toString()
             //val email = emailUser.text.toString()
 
-            val myUser = MyUser(username, level.toInt(), xp.toInt())
+            val myUser = MyUser(username, level, xp)
             db.collection("users").document(user.uid).set(myUser)
 
             Toast.makeText(requireContext(), "Changes saved", Toast.LENGTH_LONG).show()
