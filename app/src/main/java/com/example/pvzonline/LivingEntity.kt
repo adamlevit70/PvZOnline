@@ -4,7 +4,8 @@ import android.widget.ImageView
 
 open class LivingEntity(
     val image: ImageView,
-    val cooldown: Float,
+    val dmg: Int,
+    val cooldownMs: Long,
     var hp: Int
 )
 {
@@ -17,7 +18,7 @@ open class LivingEntity(
     }
 
     open fun dead() {
-        println("DEAD")
+        image.visibility = ImageView.GONE
     }
 
     open fun isDead() : Boolean {

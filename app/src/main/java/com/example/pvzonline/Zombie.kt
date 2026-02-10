@@ -4,12 +4,13 @@ import android.widget.ImageView
 
 class Zombie(
     val zombieImage: ImageView,
+    dmg: Int,
     val speed: Float,
-    cooldown: Float,
+    cooldownMs: Long,
     hp: Int
-) : LivingEntity(zombieImage, cooldown, hp) {
+) : LivingEntity(zombieImage, dmg, cooldownMs, hp) {
 
-    override fun dead() {
-        println("ZOMBIE DEAD")
+    fun attack(plant: Plant) {
+        plant.takeDmg(dmg)
     }
 }

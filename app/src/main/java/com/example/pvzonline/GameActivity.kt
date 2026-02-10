@@ -93,10 +93,17 @@ class GameActivity : AppCompatActivity() {
             plantImage.setImageResource(R.drawable.plant_peashooter)
             plantImage.visibility = ImageView.VISIBLE
 
-            val newPlant = Plant(plantImage, 2, 2f, 100)
+            val newPlant = Plant(plantImage,
+                20,
+                1000,
+                100,
+                ::getClosestZombieInFront
+            )
 
             // Save the plant in the matrix
             plantMatrix[row][col] = newPlant
+
+            newPlant.startAttacking(row)
         }
 
     }
@@ -114,7 +121,7 @@ class GameActivity : AppCompatActivity() {
 
         mainLayout.addView(zombieImage)
 
-        val zombie = Zombie(zombieImage, 3f, 1f, 100)
+        val zombie = Zombie(zombieImage, 50,3f, 1000, 100)
         zombiesByRow[row].add(zombie)
 
         // Wait for layout only to position the zombie
@@ -143,6 +150,12 @@ class GameActivity : AppCompatActivity() {
 
         val runnable = object : Runnable {
             override fun run() {
+                if(zombie.isDead()) {
+                    // After the zombie died, stop the loop and remove it from the list
+                    zombiesByRow[row].remove(zombie)
+                    return
+                }
+
                 if (!isAttacking) {
                     zombieImage.x -= speed
                 }
@@ -161,7 +174,7 @@ class GameActivity : AppCompatActivity() {
                             speed = 0f
 
                             zombieImage.postDelayed({
-                                plant.takeDmg(50)
+                                zombie.attack(plant);
 
                                 if (plant.hp <= 0) {
                                     plantMatrix[row][col] = null
@@ -169,7 +182,7 @@ class GameActivity : AppCompatActivity() {
 
                                 speed = zombie.speed
                                 isAttacking = false
-                            }, 500)
+                            }, zombie.cooldownMs)
                         }
                     }
                 }
