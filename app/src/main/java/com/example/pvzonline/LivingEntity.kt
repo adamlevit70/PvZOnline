@@ -1,5 +1,6 @@
 package com.example.pvzonline
 
+import android.widget.FrameLayout
 import android.widget.ImageView
 
 open class LivingEntity(
@@ -18,7 +19,9 @@ open class LivingEntity(
     }
 
     open fun dead() {
-        image.visibility = ImageView.GONE
+        // Delete the ImageView (destroy the visibility)
+        val parent = image.parent as? FrameLayout
+        parent?.removeView(image)
     }
 
     open fun isDead() : Boolean {

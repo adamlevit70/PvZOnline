@@ -1,6 +1,6 @@
 package com.example.pvzonline
 
-import android.opengl.Visibility
+import android.widget.FrameLayout
 import android.widget.ImageView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -40,6 +40,6 @@ class Plant(
 
     override fun dead() {
         attackingJob?.cancel()
-        image.visibility = ImageView.GONE
+        image.visibility = ImageView.GONE  // Hide it rather than delete
     }
 }

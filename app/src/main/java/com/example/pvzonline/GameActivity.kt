@@ -105,7 +105,6 @@ class GameActivity : AppCompatActivity() {
 
             newPlant.startAttacking(row)
         }
-
     }
 
 
@@ -132,6 +131,7 @@ class GameActivity : AppCompatActivity() {
             // Align zombie to row
             zombieImage.y = tile.y + tileHeight + (zombieImage.height / 5)
             zombieImage.x = gameBoardGrid.x + gameBoardGrid.width.toFloat()
+            println("(" + tile.x + ", " + tile.y + ")")
 
             // Start movement + attack loop
             startZombieLoop(zombie, row)
