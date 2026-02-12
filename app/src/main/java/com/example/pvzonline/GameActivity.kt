@@ -93,10 +93,12 @@ class GameActivity : AppCompatActivity() {
             plantImage.setImageResource(R.drawable.plant_peashooter)
             plantImage.visibility = ImageView.VISIBLE
 
-            val newPlant = Plant(plantImage,
+            val newPlant = Plant(
+                plantImage,
                 20,
                 1000,
                 100,
+                mainLayout,
                 ::getClosestZombieInFront
             )
 
@@ -106,6 +108,26 @@ class GameActivity : AppCompatActivity() {
             newPlant.startAttacking(row)
         }
     }
+    /*
+    fun shoot(peashooter: ImageView) {
+
+        val bullet = ImageView(peashooter.context)
+        bullet.setImageResource(R.drawable.peashooter_bullet)
+
+        val size = 60
+        val params = FrameLayout.LayoutParams(size, size)
+
+        // Spawn at front of peashooter
+        params.leftMargin = peashooter.x.toInt() + peashooter.width
+        params.topMargin = peashooter.y.toInt() + peashooter.height / 2
+
+        bullet.layoutParams = params
+
+        mainLayout.addView(bullet)   // gameLayout = your root FrameLayout
+
+        moveBullet(bullet)
+    }
+    */
 
 
     private fun spawnZombie(row: Int) {
@@ -176,6 +198,7 @@ class GameActivity : AppCompatActivity() {
                             zombieImage.postDelayed({
                                 zombie.attack(plant);
 
+                                // When plant died, remove from the array
                                 if (plant.hp <= 0) {
                                     plantMatrix[row][col] = null
                                 }
@@ -196,10 +219,17 @@ class GameActivity : AppCompatActivity() {
 
     private fun getClosestZombieInFront(
         row: Int,
-        plantX: Float
+        posX: Float
     ): Zombie? {
         return zombiesByRow[row]
-            .filter { it.zombieImage.x > plantX }
+            .filter { it.zombieImage.x > posX }
             .minByOrNull { it.zombieImage.x }
+    }
+
+    private fun reachedZombie(
+        row: Int,
+        posX: Float
+    ) : Boolean {
+        return (getClosestZombieInFront(row, posX)!!.zombieImage.x - posX < 2f)
     }
 }
