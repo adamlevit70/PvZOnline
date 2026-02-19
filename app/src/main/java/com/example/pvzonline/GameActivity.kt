@@ -108,27 +108,6 @@ class GameActivity : AppCompatActivity() {
             newPlant.startAttacking(row)
         }
     }
-    /*
-    fun shoot(peashooter: ImageView) {
-
-        val bullet = ImageView(peashooter.context)
-        bullet.setImageResource(R.drawable.peashooter_bullet)
-
-        val size = 60
-        val params = FrameLayout.LayoutParams(size, size)
-
-        // Spawn at front of peashooter
-        params.leftMargin = peashooter.x.toInt() + peashooter.width
-        params.topMargin = peashooter.y.toInt() + peashooter.height / 2
-
-        bullet.layoutParams = params
-
-        mainLayout.addView(bullet)   // gameLayout = your root FrameLayout
-
-        moveBullet(bullet)
-    }
-    */
-
 
     private fun spawnZombie(row: Int) {
         val zombieImage = ImageView(this).apply {

@@ -37,11 +37,21 @@ class Plant(
     }
 
     private fun shoot() {
+        // Convert the plant's pos to FrameLayout cords system
+        val plantLocation = IntArray(2)
+        val parentLocation = IntArray(2)
+
+        image.getLocationOnScreen(plantLocation)
+        parent.getLocationOnScreen(parentLocation)
+
+        val xInParent = plantLocation[0] - parentLocation[0] + image.width / 2
+        val yInParent = plantLocation[1] - parentLocation[1] + image.height / 8
+
         PeaBullet(
             parent,
             plantRow,
-            image.x + image.width,
-            image.y,
+            xInParent.toFloat(),
+            yInParent.toFloat(),
             15f,
             dmg,
             findZombie

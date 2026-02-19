@@ -24,6 +24,7 @@ class PeaBullet(
 
     init {
         parent.addView(bulletImage)
+        checkCollision()
         startMoving()
     }
 
@@ -36,6 +37,7 @@ class PeaBullet(
 
                 checkCollision()
 
+                // Despawn if out of screen
                 if (bulletImage.x > parent.width) {
                     destroy()
                     return
@@ -47,11 +49,20 @@ class PeaBullet(
     }
 
     private fun checkCollision() {
-        val zombie = findZombie(row, bulletImage.x) ?: return
+        val bulletLeft = bulletImage.x
+        val bulletRight = bulletImage.x + bulletImage.width
 
-        // Since bullet only moves right,
-        // simple X-distance check is enough
-        if (zombie.zombieImage.x - bulletImage.x <= 20f) {
+        val zombie = findZombie(row, bulletLeft) ?: return
+
+        val zombieLeft = zombie.zombieImage.x
+        val zombieRight = zombie.zombieImage.x + zombie.zombieImage.width
+
+
+        val isColliding = bulletRight >= zombieLeft &&
+                bulletLeft <= zombieRight
+
+        if (isColliding) {
+            println("HIT ZOMBIE")
             zombie.takeDmg(damage)
             destroy()
         }
