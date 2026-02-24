@@ -18,6 +18,13 @@ import java.util.Queue
 
 class GameActivity : AppCompatActivity() {
 
+    enum class PlantType {
+        PEASHOOTER
+    }
+    private lateinit var peashooterCard: ImageView
+
+    private var selectedPlantType: PlantType? = null
+
     private val rows = 5
     private val cols = 9
     private lateinit var gameBoardGrid: GridLayout
@@ -45,10 +52,27 @@ class GameActivity : AppCompatActivity() {
         gameBoardGrid = findViewById(R.id.gameBoardGrid)
         gameLayout = findViewById(R.id.gameLayout)
         sunCounterText = findViewById(R.id.sunCounterText)
+        peashooterCard = findViewById(R.id.peashooterCard)
+
+        setupPlantPicker()
 
         updateSunUI()
 
         createBoard()
+    }
+
+    private fun setupPlantPicker() {
+        peashooterCard.setOnClickListener {
+
+            if (selectedPlantType == PlantType.PEASHOOTER) {
+                // Deselect if clicked again
+                selectedPlantType = null
+                peashooterCard.alpha = 1f
+            } else {
+                selectedPlantType = PlantType.PEASHOOTER
+                peashooterCard.alpha = 0.5f  // visually show selected
+            }
+        }
     }
 
     // Every time the sun value is updated, we will call this function
@@ -151,7 +175,7 @@ class GameActivity : AppCompatActivity() {
                 plantImage,
                 20,
                 1000,
-                100,
+                1000,
                 gameLayout,
                 ::getClosestZombieInFront
             )
