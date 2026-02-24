@@ -14,7 +14,7 @@ class Sun(
     init {
         imageView.setImageResource(R.drawable.sun)
 
-        val size = 150
+        val size = 200
         val params = FrameLayout.LayoutParams(size, size)
         imageView.layoutParams = params
 
