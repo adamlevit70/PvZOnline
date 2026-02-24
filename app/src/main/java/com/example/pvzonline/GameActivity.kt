@@ -1,5 +1,6 @@
 package com.example.pvzonline
 
+import Sun
 import android.animation.ObjectAnimator
 import android.content.pm.ActivityInfo
 import android.os.Bundle
@@ -7,6 +8,7 @@ import android.view.animation.LinearInterpolator
 import android.widget.FrameLayout
 import android.widget.GridLayout
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -19,11 +21,21 @@ class GameActivity : AppCompatActivity() {
     private val rows = 5
     private val cols = 9
     private lateinit var gameBoardGrid: GridLayout
-    private lateinit var mainLayout: FrameLayout
+    private lateinit var gameLayout: FrameLayout
     private val plantMatrix = Array(rows) { arrayOfNulls<Plant>(cols) }
     val zombiesByRow = Array(rows) { mutableListOf<Zombie>() }
+    private var sunPoints = 50
+    private lateinit var sunCounterText: TextView
     private var tileHeight : Int = 0
     private var tileWidth : Int = 0
+
+    /*
+        *
+        IMPORTANT: When switching to online, REMOVE ALL THE RANDOM
+        *
+        * TODO: Sort order for plants and zombies spawn according to row spawn
+     */
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,10 +43,20 @@ class GameActivity : AppCompatActivity() {
         setContentView(R.layout.activity_game)
 
         gameBoardGrid = findViewById(R.id.gameBoardGrid)
-        mainLayout = findViewById(R.id.mainLayout)
+        gameLayout = findViewById(R.id.gameLayout)
+        sunCounterText = findViewById(R.id.sunCounterText)
+
+        updateSunUI()
 
         createBoard()
     }
+
+    // Every time the sun value is updated, we will call this function
+    private fun updateSunUI() {
+        // Change UI text to the updated sun value
+        sunCounterText.text = sunPoints.toString()
+    }
+
 
     private fun createBoard() {
         gameBoardGrid.post {
@@ -71,12 +93,14 @@ class GameActivity : AppCompatActivity() {
                 }
             }
 
-            // --- SPAWN ZOMBIE AFTER BOARD IS READY ---
+            // --- START GAME LOOP AFTER BOARD IS READY ---
             startZombieSpawnGeneration()
+            startSunSpawnGeneration()
         }
     }
 
     private fun startZombieSpawnGeneration() {
+        // As long as the Activity runs, keep spawning zombies
         lifecycleScope.launch {
             while(true) {
                 val spawnDelay = (2000..3000).random()
@@ -85,6 +109,36 @@ class GameActivity : AppCompatActivity() {
                 spawnZombie(spawnRow)
             }
         }
+    }
+
+    private fun startSunSpawnGeneration() {
+        // As long as the Activity runs, keep spawning suns
+        lifecycleScope.launch {
+            while (true) {
+                delay((3000..6000).random().toLong())
+                spawnSun()
+            }
+        }
+    }
+
+    private fun spawnSun() {
+        // Create Sun class which will add to the total sun points when obtained
+        val sun = Sun(gameLayout) { amount ->
+            addSunPoints(amount)
+        }
+
+        // Spawn sun at random X pos and set its target when falls
+        gameLayout.post {
+            val randomX = (0..(gameLayout.width - 150)).random().toFloat()
+            val targetY = gameBoardGrid.y + gameBoardGrid.height - 200f
+
+            sun.spawn(randomX, targetY)
+        }
+    }
+
+    private fun addSunPoints(amount: Int) {
+        sunPoints += amount
+        updateSunUI()
     }
 
     private fun placePlant(plantImage: ImageView, row: Int, col: Int) {
@@ -98,7 +152,7 @@ class GameActivity : AppCompatActivity() {
                 20,
                 1000,
                 100,
-                mainLayout,
+                gameLayout,
                 ::getClosestZombieInFront
             )
 
@@ -119,7 +173,7 @@ class GameActivity : AppCompatActivity() {
             )
         }
 
-        mainLayout.addView(zombieImage)
+        gameLayout.addView(zombieImage)
 
         val zombie = Zombie(zombieImage, 50,3f, 1000, 100)
         zombiesByRow[row].add(zombie)
