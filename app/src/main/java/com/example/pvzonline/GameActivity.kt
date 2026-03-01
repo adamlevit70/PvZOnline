@@ -279,7 +279,7 @@ class GameActivity : AppCompatActivity() {
         posX: Float
     ): Zombie? {
         return zombiesByRow[row]
-            .filter { it.zombieImage.x > posX }
+            .filter { it.zombieImage.x + it.zombieImage.width > posX }
             .minByOrNull { it.zombieImage.x }
     }
 

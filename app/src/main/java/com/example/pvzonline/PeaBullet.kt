@@ -37,7 +37,7 @@ class PeaBullet(
 
                 checkCollision()
 
-                // Despawn if out of screen
+                // Destroy if out of screen
                 if (bulletImage.x > parent.width) {
                     destroy()
                     return
@@ -49,20 +49,30 @@ class PeaBullet(
     }
 
     private fun checkCollision() {
-        val bulletLeft = bulletImage.x
-        val bulletRight = bulletImage.x + bulletImage.width
+        // Use actual width or fallback
+        val bulletWidth = if (bulletImage.width > 0) bulletImage.width else 60
+        
+        // Define a tighter hitbox for the bullet
+        val bulletHitboxLeft = bulletImage.x + bulletWidth * 0.2f
+        val bulletHitboxRight = bulletImage.x + bulletWidth * 0.8f
 
-        val zombie = findZombie(row, bulletLeft) ?: return
+        // Get the target zombie
+        // We use the bullet's center for the initial search to avoid picking a zombie behind the bullet
+        val searchX = bulletImage.x + bulletWidth / 2
+        val zombie = findZombie(row, searchX) ?: return
 
-        val zombieLeft = zombie.zombieImage.x
-        val zombieRight = zombie.zombieImage.x + zombie.zombieImage.width
+        val zombieWidth = zombie.zombieImage.width
+        
+        // Adjust the zombie's hitbox
+        // The hitbox = the middle 40% of the image
+        val zombieHitboxLeft = zombie.zombieImage.x + zombieWidth * 0.4f
+        val zombieHitboxRight = zombie.zombieImage.x + zombieWidth * 0.8f
 
 
-        val isColliding = bulletRight >= zombieLeft &&
-                bulletLeft <= zombieRight
+        val isColliding = bulletHitboxRight >= zombieHitboxLeft &&
+                bulletHitboxLeft <= zombieHitboxRight
 
         if (isColliding) {
-            println("HIT ZOMBIE")
             zombie.takeDmg(damage)
             destroy()
         }
