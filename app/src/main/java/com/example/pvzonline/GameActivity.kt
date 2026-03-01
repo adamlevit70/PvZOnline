@@ -167,24 +167,45 @@ class GameActivity : AppCompatActivity() {
 
     private fun placePlant(plantImage: ImageView, row: Int, col: Int) {
         // Place plant on tile only if available
-        if(plantMatrix[row][col] == null) {
-            plantImage.setImageResource(R.drawable.plant_peashooter)
-            plantImage.visibility = ImageView.VISIBLE
-
-            val newPlant = Plant(
-                plantImage,
-                20,
-                1000,
-                1000,
-                gameLayout,
-                ::getClosestZombieInFront
-            )
+        if(plantMatrix[row][col] == null && selectedPlantType != null) {
+            val newPlant = createPlantByType(plantImage)
 
             // Save the plant in the matrix
             plantMatrix[row][col] = newPlant
+            // Show the plant on tile
+            plantImage.visibility = ImageView.VISIBLE
 
             newPlant.startAttacking(row)
         }
+    }
+
+    private fun createPlantByType(plantImage: ImageView) : Plant {
+        val newPlant: Plant
+
+        if(selectedPlantType == PlantType.PEASHOOTER) {
+            plantImage.setImageResource(R.drawable.plant_peashooter)
+
+            newPlant = Plant(
+                plantImage,
+                20,
+                1000,
+                100,
+                gameLayout,
+                ::getClosestZombieInFront
+            )
+        }
+        else {
+            newPlant = Plant(
+                plantImage,
+                20,
+                1000,
+                100,
+                gameLayout,
+                ::getClosestZombieInFront
+            )
+        }
+
+        return newPlant
     }
 
     private fun spawnZombie(row: Int) {
