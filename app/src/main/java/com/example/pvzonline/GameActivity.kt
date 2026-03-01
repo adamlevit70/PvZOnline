@@ -70,7 +70,7 @@ class GameActivity : AppCompatActivity() {
                 peashooterCard.alpha = 1f
             } else {
                 selectedPlantType = PlantType.PEASHOOTER
-                peashooterCard.alpha = 0.5f  // visually show selected
+                peashooterCard.alpha = 0.6f  // visually show selected
             }
         }
     }
@@ -127,7 +127,7 @@ class GameActivity : AppCompatActivity() {
         // As long as the Activity runs, keep spawning zombies
         lifecycleScope.launch {
             while(true) {
-                val spawnDelay = (2000..3000).random()
+                val spawnDelay = (4000..5000).random()
                 val spawnRow = (0..4).random()
                 delay(spawnDelay.toLong())
                 spawnZombie(spawnRow)
@@ -170,19 +170,30 @@ class GameActivity : AppCompatActivity() {
         if(plantMatrix[row][col] == null && selectedPlantType != null) {
             val newPlant = createPlantByType(plantImage)
 
-            // Save the plant in the matrix
-            plantMatrix[row][col] = newPlant
-            // Show the plant on tile
-            plantImage.visibility = ImageView.VISIBLE
+            // Trying to place the plant on the tile, if could create
+            if(newPlant != null) {
+                // Save the plant in the matrix
+                plantMatrix[row][col] = newPlant
+                // Show the plant on tile
+                plantImage.visibility = ImageView.VISIBLE
 
-            newPlant.startAttacking(row)
+                newPlant.startAttacking(row)
+            }
         }
     }
 
-    private fun createPlantByType(plantImage: ImageView) : Plant {
+    private fun createPlantByType(plantImage: ImageView) : Plant? {
         val newPlant: Plant
 
+        // According to the selected plant type, create the plant
         if(selectedPlantType == PlantType.PEASHOOTER) {
+            // Before creating it, check if enough sun points
+            if(sunPoints < 100)  {
+                return null
+            }
+            sunPoints -= 100
+            updateSunUI()
+
             plantImage.setImageResource(R.drawable.plant_peashooter)
 
             newPlant = Plant(
@@ -195,6 +206,7 @@ class GameActivity : AppCompatActivity() {
             )
         }
         else {
+
             newPlant = Plant(
                 plantImage,
                 20,
@@ -203,6 +215,7 @@ class GameActivity : AppCompatActivity() {
                 gameLayout,
                 ::getClosestZombieInFront
             )
+
         }
 
         return newPlant
