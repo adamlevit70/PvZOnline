@@ -67,11 +67,21 @@ class GameActivity : AppCompatActivity() {
             if (selectedPlantType == PlantType.PEASHOOTER) {
                 // Deselect if clicked again
                 selectedPlantType = null
-                peashooterCard.alpha = 1f
+                changePlantCardAlpha(peashooterCard, false)
             } else {
                 selectedPlantType = PlantType.PEASHOOTER
-                peashooterCard.alpha = 0.6f  // visually show selected
+                changePlantCardAlpha(peashooterCard, true)
             }
+        }
+    }
+
+    private fun changePlantCardAlpha(card: ImageView, selected: Boolean) {
+        // Visually show selected
+        if(selected) {
+            card.alpha = 0.6f
+        }
+        else {
+            card.alpha = 1f
         }
     }
 
@@ -191,8 +201,7 @@ class GameActivity : AppCompatActivity() {
             if(sunPoints < 100)  {
                 return null
             }
-            sunPoints -= 100
-            updateSunUI()
+            addSunPoints(-100)
 
             plantImage.setImageResource(R.drawable.plant_peashooter)
 
@@ -204,6 +213,8 @@ class GameActivity : AppCompatActivity() {
                 gameLayout,
                 ::getClosestZombieInFront
             )
+
+            peashooterCard
         }
         else {
 
@@ -218,6 +229,7 @@ class GameActivity : AppCompatActivity() {
 
         }
 
+        selectedPlantType = null
         return newPlant
     }
 
@@ -315,12 +327,5 @@ class GameActivity : AppCompatActivity() {
         return zombiesByRow[row]
             .filter { it.zombieImage.x + it.zombieImage.width > posX }
             .minByOrNull { it.zombieImage.x }
-    }
-
-    private fun reachedZombie(
-        row: Int,
-        posX: Float
-    ) : Boolean {
-        return (getClosestZombieInFront(row, posX)!!.zombieImage.x - posX < 2f)
     }
 }
