@@ -19,9 +19,10 @@ import java.util.Queue
 class GameActivity : AppCompatActivity() {
 
     enum class PlantType {
-        PEASHOOTER
+        PEASHOOTER, WALLNUT
     }
     private lateinit var peashooterCard: ImageView
+    private lateinit var wallnutCard: ImageView
 
     private var selectedPlantType: PlantType? = null
 
@@ -53,6 +54,7 @@ class GameActivity : AppCompatActivity() {
         gameLayout = findViewById(R.id.gameLayout)
         sunCounterText = findViewById(R.id.sunCounterText)
         peashooterCard = findViewById(R.id.peashooterCard)
+        wallnutCard = findViewById(R.id.wallnutCard)
 
         setupPlantPicker()
 
@@ -63,15 +65,24 @@ class GameActivity : AppCompatActivity() {
 
     private fun setupPlantPicker() {
         peashooterCard.setOnClickListener {
+            selectPlant(PlantType.PEASHOOTER, peashooterCard)
+        }
+        wallnutCard.setOnClickListener {
+            selectPlant(PlantType.WALLNUT, wallnutCard)
+        }
+    }
 
-            if (selectedPlantType == PlantType.PEASHOOTER) {
-                // Deselect if clicked again
-                selectedPlantType = null
-                changePlantCardAlpha(peashooterCard, false)
-            } else {
-                selectedPlantType = PlantType.PEASHOOTER
-                changePlantCardAlpha(peashooterCard, true)
-            }
+    private fun selectPlant(type: PlantType, card: ImageView) {
+        if (selectedPlantType == type) {
+            selectedPlantType = null
+            changePlantCardAlpha(card, false)
+        } else {
+            // Deselect previous
+            changePlantCardAlpha(peashooterCard, false)
+            changePlantCardAlpha(wallnutCard, false)
+            
+            selectedPlantType = type
+            changePlantCardAlpha(card, true)
         }
     }
 
@@ -193,43 +204,51 @@ class GameActivity : AppCompatActivity() {
     }
 
     private fun createPlantByType(plantImage: ImageView) : Plant? {
-        val newPlant: Plant
+        val type = selectedPlantType ?: return null
+        val cost = when(type) {
+            PlantType.PEASHOOTER -> 100
+            PlantType.WALLNUT -> 50
+        }
 
-        // According to the selected plant type, create the plant
-        if(selectedPlantType == PlantType.PEASHOOTER) {
-            // Before creating it, check if enough sun points
-            if(sunPoints < 100)  {
-                return null
+        if(sunPoints < cost)  {
+            return null
+        }
+        addSunPoints(-cost)
+
+        val newPlant = when(type) {
+            PlantType.PEASHOOTER -> {
+                plantImage.setImageResource(R.drawable.plant_peashooter)
+                Plant(
+                    plantImage,
+                    20,
+                    2000,
+                    100,
+                    gameLayout,
+                    ::getClosestZombieInFront,
+                    AttackType.SHOOT,
+                    0f // Infinite radius
+                )
             }
-            addSunPoints(-100)
-
-            plantImage.setImageResource(R.drawable.plant_peashooter)
-
-            newPlant = Plant(
-                plantImage,
-                20,
-                1000,
-                100,
-                gameLayout,
-                ::getClosestZombieInFront
-            )
-
-            peashooterCard
-        }
-        else {
-
-            newPlant = Plant(
-                plantImage,
-                20,
-                1000,
-                100,
-                gameLayout,
-                ::getClosestZombieInFront
-            )
-
+            PlantType.WALLNUT -> {
+                plantImage.setImageResource(R.drawable.plant_wallnut)
+                Plant(
+                    plantImage,
+                    0,
+                    1000,
+                    4000,
+                    gameLayout,
+                    ::getClosestZombieInFront,
+                    AttackType.NONE,
+                    0f
+                )
+            }
         }
 
+        // Reset selection visual
+        changePlantCardAlpha(peashooterCard, false)
+        changePlantCardAlpha(wallnutCard, false)
         selectedPlantType = null
+        
         return newPlant
     }
 
@@ -256,7 +275,6 @@ class GameActivity : AppCompatActivity() {
             // Align zombie to row
             zombieImage.y = tile.y + tileHeight + (zombieImage.height / 5)
             zombieImage.x = gameBoardGrid.x + gameBoardGrid.width.toFloat()
-            println("(" + tile.x + ", " + tile.y + ")")
 
             // Start movement + attack loop
             startZombieLoop(zombie, row)
@@ -299,15 +317,18 @@ class GameActivity : AppCompatActivity() {
                             speed = 0f
 
                             zombieImage.postDelayed({
-                                zombie.attack(plant);
+                                // Attack plant if didn't die during the delay
+                                if(!zombie.isDead()) {
+                                    zombie.attack(plant);
 
-                                // When plant died, remove from the array
-                                if (plant.hp <= 0) {
-                                    plantMatrix[row][col] = null
+                                    // When plant died, remove from the array
+                                    if (plant.hp <= 0) {
+                                        plantMatrix[row][col] = null
+                                    }
+
+                                    speed = zombie.speed
+                                    isAttacking = false
                                 }
-
-                                speed = zombie.speed
-                                isAttacking = false
                             }, zombie.cooldownMs)
                         }
                     }

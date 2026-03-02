@@ -4,13 +4,19 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import kotlinx.coroutines.*
 
+enum class AttackType {
+    SHOOT, MELEE, NONE
+}
+
 class Plant(
     plantImage: ImageView,
     dmg: Int,
     cooldownMs: Long,
     hp: Int,
     private val parent: FrameLayout,
-    private val findZombie: (row: Int, plantX: Float) -> Zombie?
+    private val findZombie: (row: Int, plantX: Float) -> Zombie?,
+    private val attackType: AttackType = AttackType.SHOOT,
+    private val attackRadius: Float = 0f
 ) : LivingEntity(plantImage, dmg, cooldownMs, hp) {
 
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -19,7 +25,7 @@ class Plant(
     private var plantRow: Int = -1
 
     fun startAttacking(row: Int) {
-        if (attackingJob != null) return
+        if (attackingJob != null || attackType == AttackType.NONE) return
         plantRow = row
 
         attackingJob = scope.launch {
@@ -30,14 +36,23 @@ class Plant(
                 image.getLocationOnScreen(plantLocation)
                 parent.getLocationOnScreen(parentLocation)
                 
-                val xInParent = plantLocation[0] - parentLocation[0]
+                val xInParent = (plantLocation[0] - parentLocation[0]).toFloat()
                 val firingPointX = xInParent + image.width
 
                 // Pass the absolute X to findZombie
-                val zombie = findZombie(plantRow, firingPointX.toFloat())
+                val zombie = findZombie(plantRow, firingPointX)
 
                 if (zombie != null) {
-                    shoot()
+                    val zombieX = zombie.zombieImage.x
+                    val distance = zombieX - firingPointX
+                    
+                    if (attackRadius <= 0f || distance <= attackRadius) {
+                        when (attackType) {
+                            AttackType.SHOOT -> shoot()
+                            AttackType.MELEE -> zombie.takeDmg(dmg)
+                            else -> {}
+                        }
+                    }
                 }
 
                 delay(cooldownMs)

@@ -54,6 +54,16 @@
                 android:background="@drawable/plant_card_bg"
                 android:padding="8dp"
                 android:elevation="8dp"/>
+
+            <ImageView
+                android:id="@+id/wallnutCard"
+                android:layout_width="50dp"
+                android:layout_height="60dp"
+                android:src="@drawable/plant_wallnut"
+                android:background="@drawable/plant_card_bg"
+                android:padding="8dp"
+                android:elevation="8dp"
+                android:layout_marginStart="10dp"/>
         </LinearLayout>
 
         <!-- SUN COUNTER -->
