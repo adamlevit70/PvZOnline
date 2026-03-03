@@ -40,7 +40,7 @@
             android:id="@+id/plantPickerLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="5dp"
             android:layout_marginStart="20dp"
             android:orientation="horizontal"
             android:gravity="left"
@@ -48,22 +48,27 @@
 
             <ImageView
                 android:id="@+id/peashooterCard"
-                android:layout_width="50dp"
-                android:layout_height="60dp"
                 android:src="@drawable/plant_peashooter"
                 android:background="@drawable/plant_card_bg"
-                android:padding="8dp"
-                android:elevation="8dp"/>
+                style="@style/PlantPicker"/>
+
+            <ImageView
+                android:id="@+id/sunflowerCard"
+                android:src="@drawable/plant_sunflower"
+                android:background="@drawable/plant_card_bg"
+                style="@style/PlantPicker" />
 
             <ImageView
                 android:id="@+id/wallnutCard"
-                android:layout_width="50dp"
-                android:layout_height="60dp"
                 android:src="@drawable/plant_wallnut"
                 android:background="@drawable/plant_card_bg"
-                android:padding="8dp"
-                android:elevation="8dp"
-                android:layout_marginStart="10dp"/>
+                style="@style/PlantPicker" />
+
+            <ImageView
+                android:id="@+id/pumpfistCard"
+                android:src="@drawable/plant_pumpfist"
+                android:background="@drawable/plant_card_bg"
+                style="@style/PlantPicker" />
         </LinearLayout>
 
         <!-- SUN COUNTER -->
@@ -71,26 +76,26 @@
             android:id="@+id/sunCounterLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="40dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="5dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:padding="12dp"
+            android:padding="7dp"
             android:elevation="20dp">
 
             <ImageView
-                android:layout_width="60dp"
-                android:layout_height="60dp"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:src="@drawable/sun" />
 
             <TextView
                 android:id="@+id/sunCounterText"
-                android:layout_width="wrap_content"
+                android:layout_width="70dp"
                 android:layout_height="wrap_content"
                 android:text="50"
-                android:textSize="24sp"
+                android:textSize="20dp"
                 android:textStyle="bold"
-                android:textColor="@android:color/white"
-                android:layout_marginStart="8dp"/>
+                android:textColor="@android:color/white" />
 
         </LinearLayout>
 

@@ -1,7 +1,8 @@
+package com.example.pvzonline
+
 import android.view.animation.LinearInterpolator
 import android.widget.FrameLayout
 import android.widget.ImageView
-import com.example.pvzonline.R
 
 class Sun(
     private val parent: FrameLayout,
@@ -26,10 +27,23 @@ class Sun(
         }
     }
 
-    fun spawn(startX: Float, targetY: Float) {
+    fun topSpawn(startX: Float, targetY: Float) {
         // Spawn the sun at the top of the screen
         imageView.x = startX
         imageView.y = 0f
+
+        // Animate the fall of the sun
+        imageView.animate()
+            .translationY(targetY)
+            .setDuration(3000)
+            .setInterpolator(LinearInterpolator())
+            .start()
+    }
+
+    fun spawn(startX: Float, startY: Float, targetY: Float) {
+        // Spawn the sun at the top of the screen
+        imageView.x = startX
+        imageView.y = startY
 
         // Animate the fall of the sun
         imageView.animate()

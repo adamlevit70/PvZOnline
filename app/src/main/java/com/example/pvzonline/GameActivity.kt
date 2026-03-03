@@ -1,6 +1,5 @@
 package com.example.pvzonline
 
-import Sun
 import android.animation.ObjectAnimator
 import android.content.pm.ActivityInfo
 import android.os.Bundle
@@ -19,10 +18,11 @@ import java.util.Queue
 class GameActivity : AppCompatActivity() {
 
     enum class PlantType {
-        PEASHOOTER, WALLNUT
+        PEASHOOTER, WALLNUT, SUNFLOWER
     }
     private lateinit var peashooterCard: ImageView
     private lateinit var wallnutCard: ImageView
+    private lateinit var sunflowerCard: ImageView
 
     private var selectedPlantType: PlantType? = null
 
@@ -55,6 +55,7 @@ class GameActivity : AppCompatActivity() {
         sunCounterText = findViewById(R.id.sunCounterText)
         peashooterCard = findViewById(R.id.peashooterCard)
         wallnutCard = findViewById(R.id.wallnutCard)
+        sunflowerCard = findViewById(R.id.sunflowerCard)
 
         setupPlantPicker()
 
@@ -70,6 +71,9 @@ class GameActivity : AppCompatActivity() {
         wallnutCard.setOnClickListener {
             selectPlant(PlantType.WALLNUT, wallnutCard)
         }
+        sunflowerCard.setOnClickListener {
+            selectPlant(PlantType.SUNFLOWER, sunflowerCard)
+        }
     }
 
     private fun selectPlant(type: PlantType, card: ImageView) {
@@ -80,6 +84,7 @@ class GameActivity : AppCompatActivity() {
             // Deselect previous
             changePlantCardAlpha(peashooterCard, false)
             changePlantCardAlpha(wallnutCard, false)
+            changePlantCardAlpha(sunflowerCard, false)
             
             selectedPlantType = type
             changePlantCardAlpha(card, true)
@@ -168,16 +173,14 @@ class GameActivity : AppCompatActivity() {
 
     private fun spawnSun() {
         // Create Sun class which will add to the total sun points when obtained
-        val sun = Sun(gameLayout) { amount ->
-            addSunPoints(amount)
-        }
+        val sun = Sun(gameLayout, ::addSunPoints)
 
         // Spawn sun at random X pos and set its target when falls
         gameLayout.post {
             val randomX = (0..(gameLayout.width - 150)).random().toFloat()
             val targetY = gameBoardGrid.y + gameBoardGrid.height - 200f
 
-            sun.spawn(randomX, targetY)
+            sun.topSpawn(randomX, targetY)
         }
     }
 
@@ -198,7 +201,7 @@ class GameActivity : AppCompatActivity() {
                 // Show the plant on tile
                 plantImage.visibility = ImageView.VISIBLE
 
-                newPlant.startAttacking(row)
+                newPlant.start(row)
             }
         }
     }
@@ -208,6 +211,7 @@ class GameActivity : AppCompatActivity() {
         val cost = when(type) {
             PlantType.PEASHOOTER -> 100
             PlantType.WALLNUT -> 50
+            PlantType.SUNFLOWER -> 50
         }
 
         if(sunPoints < cost)  {
@@ -218,15 +222,14 @@ class GameActivity : AppCompatActivity() {
         val newPlant = when(type) {
             PlantType.PEASHOOTER -> {
                 plantImage.setImageResource(R.drawable.plant_peashooter)
-                Plant(
+                ShooterPlant(
                     plantImage,
                     20,
                     2000,
                     100,
                     gameLayout,
                     ::getClosestZombieInFront,
-                    AttackType.SHOOT,
-                    0f // Infinite radius
+                    0f
                 )
             }
             PlantType.WALLNUT -> {
@@ -236,17 +239,24 @@ class GameActivity : AppCompatActivity() {
                     0,
                     1000,
                     4000,
+                    gameLayout
+                )
+            }
+            PlantType.SUNFLOWER -> {
+                plantImage.setImageResource(R.drawable.plant_sunflower)
+                SunflowerPlant(
+                    plantImage,
+                    5000,
+                    5000,
                     gameLayout,
-                    ::getClosestZombieInFront,
-                    AttackType.NONE,
-                    0f
+                    ::addSunPoints
                 )
             }
         }
 
-        // Reset selection visual
         changePlantCardAlpha(peashooterCard, false)
         changePlantCardAlpha(wallnutCard, false)
+        changePlantCardAlpha(sunflowerCard, false)
         selectedPlantType = null
         
         return newPlant
