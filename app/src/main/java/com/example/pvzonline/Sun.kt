@@ -19,6 +19,8 @@ class Sun(
         val params = FrameLayout.LayoutParams(size, size)
         imageView.layoutParams = params
 
+        imageView.elevation = 6f  // sun over the plants and zombies
+
         parent.addView(imageView)
 
         // Setup listener

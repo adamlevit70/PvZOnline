@@ -135,6 +135,8 @@ class GameActivity : AppCompatActivity() {
                     tile.translationX = (100f - (row * 20))
 
                     val plantImage = tile.findViewById<ImageView>(R.id.plantImage)
+                    plantImage.elevation = row.toFloat()
+
                     tile.setOnClickListener {
                         placePlant(plantImage, row, col)
                     }
@@ -270,6 +272,8 @@ class GameActivity : AppCompatActivity() {
                 tileWidth * 2,
                 tileHeight * 2
             )
+
+            elevation = row.toFloat()  // lower the y pos, higher the layer order
         }
 
         gameLayout.addView(zombieImage)
