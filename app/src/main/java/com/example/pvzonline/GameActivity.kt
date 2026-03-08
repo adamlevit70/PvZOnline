@@ -2,26 +2,26 @@ package com.example.pvzonline
 
 import ShooterPlant
 import SunflowerPlant
-import android.animation.ObjectAnimator
 import android.content.pm.ActivityInfo
 import android.os.Bundle
-import android.view.animation.LinearInterpolator
 import android.widget.FrameLayout
 import android.widget.GridLayout
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.Queue
 
 class GameActivity : AppCompatActivity() {
 
     enum class PlantType {
         PEASHOOTER, WALLNUT, SUNFLOWER
     }
+    enum class ZombieType {
+        REGULAR, FOOTBALL
+    }
+
     private lateinit var peashooterCard: ImageView
     private lateinit var wallnutCard: ImageView
     private lateinit var sunflowerCard: ImageView
@@ -268,7 +268,6 @@ class GameActivity : AppCompatActivity() {
 
     private fun spawnZombie(row: Int) {
         val zombieImage = ImageView(this).apply {
-            setImageResource(R.drawable.regular_zombie)
             scaleType = ImageView.ScaleType.FIT_CENTER
             layoutParams = FrameLayout.LayoutParams(
                 tileWidth * 2,
@@ -278,10 +277,11 @@ class GameActivity : AppCompatActivity() {
             elevation = row.toFloat()  // lower the y pos, higher the layer order
         }
 
-        gameLayout.addView(zombieImage)
 
-        val zombie = Zombie(zombieImage, 50,3f, 1000, 100)
+        val zombie = createZombieByType(zombieImage)
         zombiesByRow[row].add(zombie)
+
+        gameLayout.addView(zombieImage)
 
         // Wait for layout only to position the zombie
         zombieImage.post {
@@ -296,6 +296,37 @@ class GameActivity : AppCompatActivity() {
             startZombieLoop(zombie, row)
         }
     }
+
+    // Sets the image of the zombie and creates an object according to the chosen zombie
+    private fun createZombieByType(zombieImage: ImageView) : Zombie {
+        val type = ZombieType.entries.random()  // Pick a random zombie
+
+        val newZombie = when(type) {
+            ZombieType.REGULAR -> {
+                zombieImage.setImageResource(R.drawable.zombie)
+                Zombie(
+                    zombieImage,
+                    50,
+                    2f,
+                    1000,
+                    100
+                )
+            }
+            ZombieType.FOOTBALL -> {
+                zombieImage.setImageResource(R.drawable.zombie_football)
+                Zombie(
+                    zombieImage,
+                    50,
+                    3f,
+                    1000,
+                    400
+                )
+            }
+        }
+
+        return newZombie
+    }
+
 
     private fun startZombieLoop(
         zombie: Zombie,
