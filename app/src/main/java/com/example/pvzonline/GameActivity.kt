@@ -1,5 +1,7 @@
 package com.example.pvzonline
 
+import ShooterPlant
+import SunflowerPlant
 import android.animation.ObjectAnimator
 import android.content.pm.ActivityInfo
 import android.os.Bundle
@@ -249,7 +251,7 @@ class GameActivity : AppCompatActivity() {
                 SunflowerPlant(
                     plantImage,
                     5000,
-                    5000,
+                    100,
                     gameLayout,
                     ::addSunPoints
                 )
