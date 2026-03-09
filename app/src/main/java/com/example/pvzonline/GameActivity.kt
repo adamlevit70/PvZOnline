@@ -19,7 +19,7 @@ class GameActivity : AppCompatActivity() {
         PEASHOOTER, WALLNUT, SUNFLOWER
     }
     enum class ZombieType {
-        REGULAR, FOOTBALL
+        REGULAR, FOOTBALL, JACKSON, YETI, GARGANTUAR
     }
 
     private lateinit var peashooterCard: ImageView
@@ -43,7 +43,6 @@ class GameActivity : AppCompatActivity() {
         *
         IMPORTANT: When switching to online, REMOVE ALL THE RANDOM
         *
-        * TODO: Sort order for plants and zombies spawn according to row spawn
      */
 
 
@@ -269,6 +268,8 @@ class GameActivity : AppCompatActivity() {
     private fun spawnZombie(row: Int) {
         val zombieImage = ImageView(this).apply {
             scaleType = ImageView.ScaleType.FIT_CENTER
+
+            // TODO: change zombie's scale if the zombie is indeed big
             layoutParams = FrameLayout.LayoutParams(
                 tileWidth * 2,
                 tileHeight * 2
@@ -299,7 +300,8 @@ class GameActivity : AppCompatActivity() {
 
     // Sets the image of the zombie and creates an object according to the chosen zombie
     private fun createZombieByType(zombieImage: ImageView) : Zombie {
-        val type = ZombieType.entries.random()  // Pick a random zombie
+        // FOR NOW, RANDOMLY SELECT THE ZOMBIE
+        val type = ZombieType.entries.random()
 
         val newZombie = when(type) {
             ZombieType.REGULAR -> {
@@ -316,10 +318,40 @@ class GameActivity : AppCompatActivity() {
                 zombieImage.setImageResource(R.drawable.zombie_football)
                 Zombie(
                     zombieImage,
-                    50,
+                    60,
                     3f,
                     1000,
                     400
+                )
+            }
+            ZombieType.JACKSON -> {
+                zombieImage.setImageResource(R.drawable.zombie_jackson)
+                Zombie(
+                    zombieImage,
+                    50,
+                    4f,
+                    800,
+                    300
+                )
+            }
+            ZombieType.YETI -> {
+                zombieImage.setImageResource(R.drawable.zombie_yeti)
+                Zombie(
+                    zombieImage,
+                    80,
+                    2f,
+                    1200,
+                    500
+                )
+            }
+            ZombieType.GARGANTUAR -> {
+                zombieImage.setImageResource(R.drawable.zombie_gargantuar)
+                Zombie(
+                    zombieImage,
+                    90,
+                    1.5f,
+                    1500,
+                    800
                 )
             }
         }
