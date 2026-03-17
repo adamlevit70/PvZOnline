@@ -41,9 +41,6 @@
     <style name="PlantPicker">
         <item name="android:layout_width">50dp</item>
         <item name="android:layout_height">60dp</item>
-        <item name="paddingStart">8dp</item>
         <item name="elevation">8dp</item>
-        <item name="android:layout_marginStart">10dp</item>
     </style>
-
 </resources>

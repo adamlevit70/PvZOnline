@@ -58,10 +58,18 @@ class GameActivity : AppCompatActivity() {
         gameBoardGrid = findViewById(R.id.gameBoardGrid)
         gameLayout = findViewById(R.id.gameLayout)
         sunCounterText = findViewById(R.id.sunCounterText)
+
         peashooterCard = findViewById(R.id.peashooterCard)
         sunflowerCard = findViewById(R.id.sunflowerCard)
         wallnutCard = findViewById(R.id.wallnutCard)
         pumpfistCard = findViewById(R.id.pumpfistCard)
+
+        // Setup price text of plants
+        findViewById<TextView>(R.id.peashooterPriceText).text = getCost(PlantType.PEASHOOTER).toString()
+        findViewById<TextView>(R.id.sunflowerPriceText).text = getCost(PlantType.SUNFLOWER).toString()
+        findViewById<TextView>(R.id.wallnutPriceText).text = getCost(PlantType.WALLNUT).toString()
+        findViewById<TextView>(R.id.pumpfistPriceText).text = getCost(PlantType.PUMPFIST).toString()
+
 
         setupPlantPicker()
 
@@ -220,12 +228,7 @@ class GameActivity : AppCompatActivity() {
 
     private fun createPlantByType(plantImage: ImageView) : Plant? {
         val type = selectedPlantType ?: return null
-        val cost = when(type) {
-            PlantType.PEASHOOTER -> 100
-            PlantType.SUNFLOWER -> 50
-            PlantType.WALLNUT -> 50
-            PlantType.PUMPFIST -> 200
-        }
+        val cost = getCost(type)
 
         if(sunPoints < cost)  {
             return null
@@ -287,6 +290,16 @@ class GameActivity : AppCompatActivity() {
         
         return newPlant
     }
+
+    fun getCost(type: PlantType): Int {
+        return when (type) {
+            PlantType.PEASHOOTER -> 100
+            PlantType.SUNFLOWER -> 50
+            PlantType.WALLNUT -> 50
+            PlantType.PUMPFIST -> 200
+        }
+    }
+
 
     private fun spawnZombie(row: Int) {
         val zombieImage = ImageView(this).apply {
