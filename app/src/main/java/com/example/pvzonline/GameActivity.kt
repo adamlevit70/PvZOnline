@@ -1,5 +1,6 @@
 package com.example.pvzonline
 
+import MeleePlant
 import ShooterPlant
 import SunflowerPlant
 import android.content.pm.ActivityInfo
@@ -16,15 +17,18 @@ import kotlinx.coroutines.launch
 class GameActivity : AppCompatActivity() {
 
     enum class PlantType {
-        PEASHOOTER, WALLNUT, SUNFLOWER
+        PEASHOOTER, SUNFLOWER, WALLNUT, PUMPFIST
     }
     enum class ZombieType {
         REGULAR, FOOTBALL, JACKSON, YETI, GARGANTUAR
     }
 
     private lateinit var peashooterCard: ImageView
-    private lateinit var wallnutCard: ImageView
+
     private lateinit var sunflowerCard: ImageView
+    private lateinit var wallnutCard: ImageView
+
+    private lateinit var pumpfistCard: ImageView
 
     private var selectedPlantType: PlantType? = null
 
@@ -55,8 +59,9 @@ class GameActivity : AppCompatActivity() {
         gameLayout = findViewById(R.id.gameLayout)
         sunCounterText = findViewById(R.id.sunCounterText)
         peashooterCard = findViewById(R.id.peashooterCard)
-        wallnutCard = findViewById(R.id.wallnutCard)
         sunflowerCard = findViewById(R.id.sunflowerCard)
+        wallnutCard = findViewById(R.id.wallnutCard)
+        pumpfistCard = findViewById(R.id.pumpfistCard)
 
         setupPlantPicker()
 
@@ -69,11 +74,14 @@ class GameActivity : AppCompatActivity() {
         peashooterCard.setOnClickListener {
             selectPlant(PlantType.PEASHOOTER, peashooterCard)
         }
+        sunflowerCard.setOnClickListener {
+            selectPlant(PlantType.SUNFLOWER, sunflowerCard)
+        }
         wallnutCard.setOnClickListener {
             selectPlant(PlantType.WALLNUT, wallnutCard)
         }
-        sunflowerCard.setOnClickListener {
-            selectPlant(PlantType.SUNFLOWER, sunflowerCard)
+        pumpfistCard.setOnClickListener {
+            selectPlant(PlantType.PUMPFIST, pumpfistCard)
         }
     }
 
@@ -84,8 +92,9 @@ class GameActivity : AppCompatActivity() {
         } else {
             // Deselect previous
             changePlantCardAlpha(peashooterCard, false)
-            changePlantCardAlpha(wallnutCard, false)
             changePlantCardAlpha(sunflowerCard, false)
+            changePlantCardAlpha(wallnutCard, false)
+            changePlantCardAlpha(pumpfistCard, false)
             
             selectedPlantType = type
             changePlantCardAlpha(card, true)
@@ -213,8 +222,9 @@ class GameActivity : AppCompatActivity() {
         val type = selectedPlantType ?: return null
         val cost = when(type) {
             PlantType.PEASHOOTER -> 100
-            PlantType.WALLNUT -> 50
             PlantType.SUNFLOWER -> 50
+            PlantType.WALLNUT -> 50
+            PlantType.PUMPFIST -> 200
         }
 
         if(sunPoints < cost)  {
@@ -235,16 +245,6 @@ class GameActivity : AppCompatActivity() {
                     0f
                 )
             }
-            PlantType.WALLNUT -> {
-                plantImage.setImageResource(R.drawable.plant_wallnut)
-                Plant(
-                    plantImage,
-                    0,
-                    1000,
-                    4000,
-                    gameLayout
-                )
-            }
             PlantType.SUNFLOWER -> {
                 plantImage.setImageResource(R.drawable.plant_sunflower)
                 SunflowerPlant(
@@ -255,11 +255,34 @@ class GameActivity : AppCompatActivity() {
                     ::addSunPoints
                 )
             }
+            PlantType.WALLNUT -> {
+                plantImage.setImageResource(R.drawable.plant_wallnut)
+                Plant(
+                    plantImage,
+                    0,
+                    1000,
+                    4000,
+                    gameLayout
+                )
+            }
+            PlantType.PUMPFIST -> {
+                plantImage.setImageResource(R.drawable.plant_pumpfist)
+                MeleePlant(
+                    plantImage,
+                    100,
+                    750,
+                    100,
+                    gameLayout,
+                    ::getClosestZombieInFront,
+                    1f
+                )
+            }
         }
 
         changePlantCardAlpha(peashooterCard, false)
-        changePlantCardAlpha(wallnutCard, false)
         changePlantCardAlpha(sunflowerCard, false)
+        changePlantCardAlpha(wallnutCard, false)
+        changePlantCardAlpha(pumpfistCard, false)
         selectedPlantType = null
         
         return newPlant
