@@ -20,9 +20,11 @@ class SunflowerPlant(
     override fun start(row: Int) {
         super.start(row)
         job = scope.launch {
+            delay(cooldownMs)
+
             while (isActive && hp > 0) {
-                delay(cooldownMs)
                 generateSun()
+                delay(cooldownMs)
             }
         }
     }

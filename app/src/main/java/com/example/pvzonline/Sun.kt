@@ -39,6 +39,9 @@ class Sun(
             .translationY(targetY)
             .setDuration(3000)
             .setInterpolator(LinearInterpolator())
+            .withEndAction {
+                scheduleDespawn()  // Schedule dispawn
+            }
             .start()
     }
 
@@ -52,6 +55,9 @@ class Sun(
             .translationY(targetY)
             .setDuration(3000)
             .setInterpolator(LinearInterpolator())
+            .withEndAction {
+                scheduleDespawn()
+            }
             .start()
     }
 
@@ -67,5 +73,24 @@ class Sun(
                 onCollected(value)
             }
             .start()
+    }
+
+
+    private fun scheduleDespawn() {
+        val delay: Long = 5000
+
+        imageView.postDelayed({
+            // Check if Sun still exists (not collected yet)
+            if (imageView.parent != null) {
+                // Animate its despawn
+                imageView.animate()
+                    .alpha(0f)
+                    .setDuration(300)
+                    .withEndAction {
+                        parent.removeView(imageView)
+                    }
+                    .start()
+            }
+        }, delay)
     }
 }

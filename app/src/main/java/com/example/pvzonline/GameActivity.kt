@@ -42,6 +42,7 @@ class GameActivity : AppCompatActivity() {
     private lateinit var sunCounterText: TextView
     private var tileHeight : Int = 0
     private var tileWidth : Int = 0
+    private var gameEnded : Boolean = false
 
     /*
         *
@@ -170,9 +171,9 @@ class GameActivity : AppCompatActivity() {
     }
 
     private fun startZombieSpawnGeneration() {
-        // As long as the Activity runs, keep spawning zombies
+        // As long as the game runs, keep spawning zombies
         lifecycleScope.launch {
-            while(true) {
+            while(!gameEnded) {
                 val spawnDelay = (4000..5000).random()
                 val spawnRow = (0..4).random()
                 delay(spawnDelay.toLong())
@@ -182,11 +183,13 @@ class GameActivity : AppCompatActivity() {
     }
 
     private fun startSunSpawnGeneration() {
-        // As long as the Activity runs, keep spawning suns
+        // As long as the game runs, keep spawning suns
         lifecycleScope.launch {
-            while (true) {
-                delay((3000..6000).random().toLong())
+            delay((3000..6000).random().toLong())
+
+            while (!gameEnded) {
                 spawnSun()
+                delay((3000..6000).random().toLong())
             }
         }
     }
@@ -414,8 +417,17 @@ class GameActivity : AppCompatActivity() {
                     return
                 }
 
+                if (gameEnded) return
+
+                // Zombie moves as long as no plant in front of it
                 if (!isAttacking) {
                     zombieImage.x -= speed
+                }
+
+                // Ends game when one zombie reaches to finish line (after the last plant)
+                if((zombieImage.x) < gameBoardGrid.x - 10) {
+                    endGame()
+                    return
                 }
 
                 val attackX = zombieImage.x + zombieWidth * 0.25f
@@ -455,6 +467,20 @@ class GameActivity : AppCompatActivity() {
 
         zombieImage.post(runnable)
     }
+
+
+    // Handles the DEAD screen at the end of the game
+    private fun endGame() {
+        gameEnded = true
+
+        // Pauses every plant so it will stop attacking zombies
+        for (row in plantMatrix) {
+            for (plant in row) {
+                plant?.pause()
+            }
+        }
+    }
+
 
     private fun getClosestZombieInFront(
         row: Int,

@@ -30,4 +30,8 @@ open class Plant(
         image.visibility = ImageView.GONE
         super.dead()
     }
+
+    fun pause() {
+        job?.cancel()
+    }
 }
