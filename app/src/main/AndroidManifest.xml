@@ -14,10 +14,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.PvZOnline">
+        <activity
+            android:name=".WaitingRoomActivity"
+            android:exported="false" />
+
         <receiver
             android:name=".ReminderReceiver"
             android:enabled="true"
-            android:exported="true"></receiver>
+            android:exported="true" />
 
         <activity
             android:name=".AuthActivity"
@@ -33,7 +37,7 @@
             android:exported="false" />
         <activity
             android:name=".NavigationActivity"
-            android:exported="false"></activity>
+            android:exported="false" />
     </application>
 
 </manifest>

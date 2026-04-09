@@ -28,7 +28,7 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="20dp" />
 
-    <!-- Host game button -->
+    <!-- Start game button -->
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnStartGame"
         android:layout_width="wrap_content"
@@ -36,4 +36,18 @@
         android:text="START GAME"
         style="@style/RetroButton" />
 
+    <!-- Host game button -->
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnCreateRoom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="CREATE ROOM"
+        style="@style/RetroButton" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnJoinRoom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="JOIN ROOM"
+        style="@style/RetroButton" />
 </LinearLayout>
