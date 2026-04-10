@@ -46,6 +46,7 @@ class RegisterFragment : Fragment(R.layout.fragment_register) {
 
         // Email validation
         if(android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            // Call function from register activity
             (activity as? AuthActivity)?.registerUser(email, username, password)
         }
         else {

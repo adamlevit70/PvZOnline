@@ -27,10 +27,11 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
     private fun onLoginClicked(email: String, password: String) {
 
+        /*
         // Built for testing
         (activity as? AuthActivity)?.loginUser("a@gmail.com", "123456")
+        */
 
-        /*
         // Check if email and username fields are filled
         if(email.isEmpty() || password.isEmpty()) {
             Toast.makeText(requireContext(), "Please enter all fields", Toast.LENGTH_SHORT).show()
@@ -45,12 +46,12 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
         // Email validation
         if(android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            // Call function from activity
             (activity as? AuthActivity)?.loginUser(email, password)
         }
         else {
             Toast.makeText(requireContext(), "Please enter a valid email", Toast.LENGTH_SHORT).show()
             return
         }
-         */
     }
 }

@@ -1,10 +1,16 @@
 package com.example.pvzonline
 
 import android.os.Bundle
+import android.text.InputFilter
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.TextView
+import android.widget.Toast
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -17,15 +23,27 @@ private const val ARG_PARAM2 = "param2"
  * create an instance of this fragment.
  */
 class JoinRoomFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+    private val db = FirebaseFirestore.getInstance()
+    private val roomsRef = db.collection("rooms")
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val joinRoomBtn = view.findViewById<Button>(R.id.joinRoomBtn)
+        val roomCodeInput = view.findViewById<TextView>(R.id.roomCodeInput)
+
+        joinRoomBtn.setOnClickListener {
+            if(roomCodeInput.text.toString().length != 6) {
+                Toast.makeText(requireContext(), "Code must be 6 chars long", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+
+            // Make chars ALL CAP
+            roomCodeInput.filters = arrayOf(InputFilter.AllCaps())
+            val code = roomCodeInput.text.toString()
+
+            val auth = FirebaseAuth.getInstance()
+            joinRoom(code, auth.currentUser!!.uid)
         }
     }
 
@@ -37,23 +55,38 @@ class JoinRoomFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_join_room, container, false)
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment JoinRoomFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            JoinRoomFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
+
+    fun joinRoom(code: String, currentUserId: String) {
+        val roomRef = roomsRef.document(code)
+
+        roomRef.get().addOnSuccessListener { document ->
+            if (!document.exists()) {
+                Toast.makeText(requireContext(), "Room not found", Toast.LENGTH_SHORT).show()
+                return@addOnSuccessListener
             }
+
+            val guestId = document.getString("guestId")
+            val gameStarted = document.getBoolean("gameStarted") ?: false
+
+            if (guestId != null || gameStarted) {
+                Toast.makeText(requireContext(), "Room is full or already started", Toast.LENGTH_LONG).show()
+                return@addOnSuccessListener
+            }
+
+            roomRef.update(
+                mapOf(
+                    "guestId" to currentUserId
+                )
+            ).addOnSuccessListener {
+                // Join the waiting room with the host
+                Toast.makeText(requireContext(), "Joining room", Toast.LENGTH_SHORT).show()
+                (activity as? NavigationActivity)?.goToWaitingRoom(code)
+            }.addOnFailureListener {
+                Toast.makeText(requireContext(), "Failed to join room", Toast.LENGTH_LONG).show()
+            }
+
+        }.addOnFailureListener {
+            Toast.makeText(requireContext(), "Firestore error", Toast.LENGTH_LONG).show()
+        }
     }
 }

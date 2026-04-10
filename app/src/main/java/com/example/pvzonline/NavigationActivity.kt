@@ -79,6 +79,17 @@ class NavigationActivity : AppCompatActivity() {
         scheduleGardenReminderIfAllowed()
     }
 
+    fun switchToJoinRoomFragment() {
+        replaceFragment(JoinRoomFragment())
+    }
+
+    fun goToWaitingRoom(code: String) {
+        val intent = Intent(this, WaitingRoomActivity::class.java)
+        intent.putExtra("ROOM_CODE", code)
+        startActivity(intent)
+    }
+
+
     // Show dialog only once
     private fun showAlarmPermissionDialogIfNeeded() {
         val prefs = getSharedPreferences(PREFS, MODE_PRIVATE)

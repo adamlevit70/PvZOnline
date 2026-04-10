@@ -39,8 +39,11 @@ class HomeFragment : Fragment() {
 
         btnCreateRoom.setOnClickListener {
             val auth = FirebaseAuth.getInstance()
-
             createRoom(auth.currentUser!!.uid)
+        }
+
+        btnJoinRoom.setOnClickListener {
+            (activity as? NavigationActivity)?.switchToJoinRoomFragment()
         }
     }
 
@@ -61,8 +64,9 @@ class HomeFragment : Fragment() {
 
                     roomRef.set(roomData)
                         .addOnSuccessListener {
+                            // After room is created, go to waiting room
                             Toast.makeText(requireContext(), "Room created", Toast.LENGTH_SHORT).show()
-                            goToWaitingRoom(code)
+                            (activity as? NavigationActivity)?.goToWaitingRoom(code)
                         }
                         .addOnFailureListener {
                             Toast.makeText(requireContext(), "Failed to create room", Toast.LENGTH_LONG).show()
@@ -76,38 +80,6 @@ class HomeFragment : Fragment() {
         tryCreate()
     }
 
-    fun joinRoom(code: String, currentUserId: String) {
-        val roomRef = roomsRef.document(code)
-
-        roomRef.get().addOnSuccessListener { document ->
-            if (!document.exists()) {
-                Toast.makeText(requireContext(), "Room not found", Toast.LENGTH_SHORT).show()
-                return@addOnSuccessListener
-            }
-
-            val guestId = document.getString("guestId")
-            val gameStarted = document.getBoolean("gameStarted") ?: false
-
-            if (guestId != null || gameStarted) {
-                Toast.makeText(requireContext(), "Room is full or already started", Toast.LENGTH_LONG).show()
-                return@addOnSuccessListener
-            }
-
-            roomRef.update(
-                mapOf(
-                    "guestId" to currentUserId
-                )
-            ).addOnSuccessListener {
-                goToWaitingRoom(code)
-            }.addOnFailureListener {
-                Toast.makeText(requireContext(), "Failed to join room", Toast.LENGTH_LONG).show()
-            }
-
-        }.addOnFailureListener {
-            Toast.makeText(requireContext(), "Firestore error", Toast.LENGTH_LONG).show()
-        }
-    }
-
 
     // Generates 6 chars long code to join the hosted room
     fun generateRoomCode(): String {
@@ -116,12 +88,5 @@ class HomeFragment : Fragment() {
         return (1..length)
             .map { chars.random() }
             .joinToString("")
-    }
-
-    // After room is created, go to waiting room
-    fun goToWaitingRoom(code: String) {
-        val intent = Intent(activity, WaitingRoomActivity::class.java)
-        intent.putExtra("ROOM_CODE", code)
-        startActivity(intent)
     }
 }
