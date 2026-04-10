@@ -1,10 +1,12 @@
 package com.example.pvzonline
 
+import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -19,6 +21,7 @@ class WaitingRoomActivity : AppCompatActivity() {
 
     private var hasGuest = false
     private var canStartGame = false
+    private var gameStartedLocally = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,7 +42,16 @@ class WaitingRoomActivity : AppCompatActivity() {
 
         btnStartGame.setOnClickListener {
             if(canStartGame) {
-                // Start game here
+                if(roomCode != null) {
+                    roomsRef.document(roomCode)
+                        .update("gameStarted", true)
+                        .addOnFailureListener {
+                            Toast.makeText(this, "Failed to start game", Toast.LENGTH_LONG).show()
+                        }
+                }
+                else {
+                    Toast.makeText(this, "Room code is null", Toast.LENGTH_LONG).show()
+                }
             }
         }
 
@@ -59,19 +71,19 @@ class WaitingRoomActivity : AppCompatActivity() {
                     updatePlayerTexts(hostId, guestId)
 
                     if (!hasGuest && guestId != null) {
+                        hasGuest = true
                         onGuestJoined(hostId)
                     }
 
-                    if (gameStarted == true) {
-                        // Start game
+                    if (gameStarted == true && !gameStartedLocally) {
+                        gameStartedLocally = true
+                        startGame()
                     }
                 }
             }
     }
 
     fun onGuestJoined(hostId: String?) {
-        hasGuest = true
-
         val auth = FirebaseAuth.getInstance()
         val userId = auth.currentUser!!.uid
 
@@ -80,6 +92,16 @@ class WaitingRoomActivity : AppCompatActivity() {
             val btnStartGame = findViewById<Button>(R.id.btnStartGame)
             btnStartGame.visibility = View.VISIBLE
         }
+    }
+
+
+    fun startGame() {
+        val roomCode = intent.getStringExtra("ROOM_CODE") ?: return
+
+        val intent = Intent(this, SoloGameActivity::class.java)
+        intent.putExtra("ROOM_CODE", roomCode)
+        startActivity(intent)
+        finish()
     }
 
 

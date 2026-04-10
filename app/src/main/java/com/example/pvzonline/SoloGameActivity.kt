@@ -14,7 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class GameActivity : AppCompatActivity() {
+class SoloGameActivity : AppCompatActivity() {
 
     enum class PlantType {
         PEASHOOTER, SUNFLOWER, WALLNUT, PUMPFIST

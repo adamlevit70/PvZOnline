@@ -33,8 +33,8 @@ class HomeFragment : Fragment() {
         val btnJoinRoom = view.findViewById<Button>(R.id.btnJoinRoom)
 
         btnStartGame.setOnClickListener {
-            val gameActivityIntent = Intent(activity, GameActivity::class.java)
-            startActivity(gameActivityIntent)
+            val soloGameActivityIntent = Intent(activity, SoloGameActivity::class.java)
+            startActivity(soloGameActivityIntent)
         }
 
         btnCreateRoom.setOnClickListener {
