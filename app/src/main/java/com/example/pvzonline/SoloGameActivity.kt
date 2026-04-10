@@ -54,7 +54,7 @@ class SoloGameActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-        setContentView(R.layout.activity_game)
+        setContentView(R.layout.activity_solo_game)
 
         gameBoardGrid = findViewById(R.id.gameBoardGrid)
         gameLayout = findViewById(R.id.gameLayout)

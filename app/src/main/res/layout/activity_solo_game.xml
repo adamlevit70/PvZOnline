@@ -1,0 +1,171 @@
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mainLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/game_board">
+
+    <!-- GAME LAYOUT -->
+    <FrameLayout
+        android:id="@+id/gameLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <GridLayout
+            android:layout_gravity="center_horizontal"
+            android:id="@+id/gameBoardGrid"
+            android:layout_width="630dp"
+            android:layout_height="270dp"
+            android:columnCount="9"
+            android:rowCount="5"
+            android:layout_marginStart="86dp"
+            android:layout_marginTop="115dp"
+            android:alignmentMode="alignMargins"
+            android:rowOrderPreserved="false"
+            android:useDefaultMargins="true"
+            >
+            <!-- Tiles will be added programmatically -->
+        </GridLayout>
+    </FrameLayout>
+
+    <!--  UI LAYER (ALWAYS ON TOP) -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/panel_bg">
+
+        <!-- PLANT PICKER -->
+        <LinearLayout
+            android:id="@+id/plantPickerLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:layout_marginStart="10dp"
+            android:orientation="horizontal"
+            android:gravity="bottom"
+            android:elevation="20dp">
+
+            <!-- PEASHOOTER -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginStart="10dp"
+                android:gravity="center_horizontal">
+                <ImageView
+                    android:id="@+id/peashooterCard"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"
+                    android:src="@drawable/plant_peashooter"
+                    android:background="@drawable/plant_card_bg"
+                    style="@style/PlantPicker"/>
+                <TextView
+                    android:id="@+id/peashooterPriceText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="XXX"
+                    style="@style/RetroText"
+                    android:textSize="16dp"/>
+            </LinearLayout>
+
+            <!-- SUNFLOWER -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginStart="10dp"
+                android:gravity="center_horizontal">
+                <ImageView
+                    android:id="@+id/sunflowerCard"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"
+                    android:src="@drawable/plant_sunflower"
+                    android:background="@drawable/plant_card_bg"
+                    style="@style/PlantPicker" />
+                <TextView
+                    android:id="@+id/sunflowerPriceText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="XX"
+                    style="@style/RetroText"
+                    android:textSize="16dp"/>
+            </LinearLayout>
+
+            <!-- WALLNUT -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginStart="10dp"
+                android:gravity="center_horizontal">
+                <ImageView
+                    android:id="@+id/wallnutCard"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"
+                    android:src="@drawable/plant_wallnut"
+                    android:background="@drawable/plant_card_bg"
+                    style="@style/PlantPicker" />
+                <TextView
+                    android:id="@+id/wallnutPriceText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="XX"
+                    style="@style/RetroText"
+                    android:textSize="16dp"/>
+            </LinearLayout>
+
+            <!-- PUMPFIST -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginStart="10dp"
+                android:gravity="center_horizontal">
+                <ImageView
+                    android:id="@+id/pumpfistCard"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"
+                    android:src="@drawable/plant_pumpfist"
+                    android:background="@drawable/plant_card_bg"
+                    style="@style/PlantPicker" />
+                <TextView
+                    android:id="@+id/pumpfistPriceText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="XXX"
+                    style="@style/RetroText"
+                    android:textSize="16dp"/>
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- SUN COUNTER -->
+        <LinearLayout
+            android:id="@+id/sunCounterLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:layout_marginStart="5dp"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:padding="7dp"
+            android:elevation="20dp">
+
+            <ImageView
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:src="@drawable/sun" />
+
+            <TextView
+                android:id="@+id/sunCounterText"
+                android:layout_width="70dp"
+                android:layout_height="wrap_content"
+                android:text="50"
+                android:textSize="20dp"
+                android:textStyle="bold"
+                android:textColor="@android:color/white" />
+        </LinearLayout>
+
+    </LinearLayout>
+</FrameLayout>

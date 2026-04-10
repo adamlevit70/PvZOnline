@@ -98,7 +98,7 @@ class WaitingRoomActivity : AppCompatActivity() {
     fun startGame() {
         val roomCode = intent.getStringExtra("ROOM_CODE") ?: return
 
-        val intent = Intent(this, SoloGameActivity::class.java)
+        val intent = Intent(this, GameActivity::class.java)
         intent.putExtra("ROOM_CODE", roomCode)
         startActivity(intent)
         finish()
