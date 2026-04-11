@@ -19,6 +19,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class GameActivity : AppCompatActivity() {
 
@@ -183,19 +184,27 @@ class GameActivity : AppCompatActivity() {
                 }
             }
 
-            // Start game loop with sun and zombie spawn
-            startZombieSpawnGeneration()
-            startSunSpawnGeneration()
+            // Start game loop with sun and zombie spawn only if host (the authority)
+            if(isHost) {
+                startZombieSpawnGeneration()
+                startSunSpawnGeneration()
+            }
         }
     }
 
+    // Keep spawning zombies as long as the game is running (enters here only if host)
     private fun startZombieSpawnGeneration() {
         lifecycleScope.launch {
             while(!gameEnded) {
                 val spawnDelay = (4000..5000).random()
                 val spawnRow = (0..4).random()
                 delay(spawnDelay.toLong())
-                spawnZombie(spawnRow)
+
+                // Picks randomly IDs and zombie types
+                val zombieId: String = UUID.randomUUID().toString()
+                val zombieTypeName: String = ZombieType.entries.random().toString()
+
+                sendSpawnZombieEvent(zombieId, zombieTypeName, spawnRow)
             }
         }
     }
@@ -233,7 +242,7 @@ class GameActivity : AppCompatActivity() {
             val cost = getCost(selectedPlantType!!)
             if (sunPoints >= cost) {
                 if (roomCode.isNotEmpty()) {
-                    sendRequestPlacePlantEvent(roomCode, row, col, selectedPlantType!!.name)
+                    sendRequestPlacePlantEvent(row, col, selectedPlantType!!.name)
                 }
             }
 
@@ -246,18 +255,6 @@ class GameActivity : AppCompatActivity() {
         }
     }
 
-    private fun placePlant(plantImage: ImageView, row: Int, col: Int) {
-        if(plantMatrix[row][col] == null && selectedPlantType != null) {
-            val newPlant = createPlantByType(plantImage, selectedPlantType!!.name)
-            if(newPlant != null) {
-
-                plantMatrix[row][col] = newPlant
-                plantImage.visibility = ImageView.VISIBLE
-                newPlant.start(row)
-
-            }
-        }
-    }
 
     private fun createPlantByType(plantImage: ImageView, plantTypeName: String) : Plant? {
         val type = PlantType.valueOf(plantTypeName)
@@ -282,7 +279,7 @@ class GameActivity : AppCompatActivity() {
         return newPlant
     }
 
-    fun getCost(type: PlantType): Int {
+    private fun getCost(type: PlantType): Int {
         return when (type) {
             PlantType.PEASHOOTER -> 100
             PlantType.SUNFLOWER -> 50
@@ -291,48 +288,65 @@ class GameActivity : AppCompatActivity() {
         }
     }
 
-    private fun spawnZombie(row: Int) {
-        val zombieImage = ImageView(this).apply {
-            scaleType = ImageView.ScaleType.FIT_CENTER
-            layoutParams = FrameLayout.LayoutParams(tileWidth * 2, tileHeight * 2)
-            elevation = row.toFloat()
-        }
 
-        val zombie = createZombieByType(zombieImage)
-        zombiesByRow[row].add(zombie)
-        gameLayout.addView(zombieImage)
+    private fun createZombieByType(id: String, typeName: String, zombieImage: ImageView) : Zombie {
+        val type = ZombieType.valueOf(typeName)
 
-        zombieImage.post {
-            val tileIndex = row * cols
-            val tile = gameBoardGrid.getChildAt(tileIndex)
-            zombieImage.y = tile.y + tileHeight + (zombieImage.height / 5)
-            zombieImage.x = gameBoardGrid.x + gameBoardGrid.width.toFloat()
-            startZombieLoop(zombie, row)
-        }
-    }
-
-    private fun createZombieByType(zombieImage: ImageView) : Zombie {
-        val type = ZombieType.entries.random()
         return when(type) {
             ZombieType.REGULAR -> {
                 zombieImage.setImageResource(R.drawable.zombie)
-                Zombie(zombieImage, 50, 2f, 1000, 100)
+                Zombie(
+                    id,
+                    zombieImage,
+                    50,
+                    2f,
+                    1000,
+                    100
+                )
             }
             ZombieType.FOOTBALL -> {
                 zombieImage.setImageResource(R.drawable.zombie_football)
-                Zombie(zombieImage, 60, 3f, 1000, 400)
+                Zombie(
+                    id,
+                    zombieImage,
+                    60,
+                    3f,
+                    1000,
+                    400
+                )
             }
             ZombieType.JACKSON -> {
                 zombieImage.setImageResource(R.drawable.zombie_jackson)
-                Zombie(zombieImage, 50, 4f, 800, 300)
+                Zombie(
+                    id,
+                    zombieImage,
+                    50,
+                    4f,
+                    800,
+                    300
+                )
             }
             ZombieType.YETI -> {
                 zombieImage.setImageResource(R.drawable.zombie_yeti)
-                Zombie(zombieImage, 80, 2f, 1200, 500)
+                Zombie(
+                    id,
+                    zombieImage,
+                    80,
+                    2f,
+                    1200,
+                    500
+                )
             }
             ZombieType.GARGANTUAR -> {
                 zombieImage.setImageResource(R.drawable.zombie_gargantuar)
-                Zombie(zombieImage, 90, 1.5f, 1500, 800)
+                Zombie(
+                    id,
+                    zombieImage,
+                    90,
+                    1.5f,
+                    1500,
+                    800
+                )
             }
         }
     }
@@ -369,8 +383,15 @@ class GameActivity : AppCompatActivity() {
                             speed = 0f
                             zombieImage.postDelayed({
                                 if(!zombie.isDead()) {
-                                    zombie.attack(plant)
-                                    if (plant.hp <= 0) plantMatrix[row][col] = null
+                                    if(isHost) {
+                                        zombie.attack(plant)
+
+                                        if (plant.hp <= 0) {
+                                            plantMatrix[row][col] = null
+                                            //sendPlantRemovedEvent(...)
+                                        }
+                                    }
+
                                     speed = zombie.speed
                                     isAttacking = false
                                 }
@@ -399,8 +420,11 @@ class GameActivity : AppCompatActivity() {
             .minByOrNull { it.zombieImage.x }
     }
 
+
     // --- Firebase Multiplayer Integration ---
 
+    // Listener to events
+    // Each time new event appears, it will send it to handler
     private fun listenToEvents(roomCode: String) {
         roomsRef.document(roomCode)
             .collection("events")
@@ -417,6 +441,8 @@ class GameActivity : AppCompatActivity() {
             }
     }
 
+
+    // Handle new events
     private fun handleEvent(event: DocumentSnapshot) {
         val type = event.getString("type")
 
@@ -445,35 +471,14 @@ class GameActivity : AppCompatActivity() {
 
             placePlantFromNetwork(row, col, plantTypeName)
         }
-    }
 
-    private fun sendRequestPlacePlantEvent(roomCode: String, row: Int, col: Int, plantTypeName: String) {
-        val event = hashMapOf(
-            "type" to "REQUEST_PLACE_PLANT",
-            "row" to row,
-            "col" to col,
-            "plantType" to plantTypeName,
-            "senderId" to FirebaseAuth.getInstance().currentUser!!.uid,
-            "timestamp" to FieldValue.serverTimestamp()
-        )
+        if(type == "SPAWN_ZOMBIE") {
+            val row = event.getLong("row")!!.toInt()
+            val zombieId = event.getString("zombieId")!!
+            val zombieTypeName = event.getString("zombieType")!!
 
-        roomsRef.document(roomCode)
-            .collection("events")
-            .add(event)
-    }
-
-    fun sendApprovedPlantEvent(row: Int, col: Int, plantTypeName: String) {
-        val event = hashMapOf(
-            "type" to "PLACE_PLANT",
-            "row" to row,
-            "col" to col,
-            "plantType" to plantTypeName,
-            "timestamp" to FieldValue.serverTimestamp()
-        )
-
-        roomsRef.document(roomCode)
-            .collection("events")
-            .add(event)
+            spawnZombieFromNetwork(zombieId, zombieTypeName, row)
+        }
     }
 
 
@@ -483,7 +488,7 @@ class GameActivity : AppCompatActivity() {
         val tileIndex = row * cols + col
         val tile = gameBoardGrid.getChildAt(tileIndex) as FrameLayout
         val plantImage = tile.findViewById<ImageView>(R.id.plantImage)
-        
+
         val newPlant = createPlantByType(plantImage, plantTypeName)
         if (newPlant != null) {
 
@@ -497,7 +502,81 @@ class GameActivity : AppCompatActivity() {
         }
     }
 
+    private fun spawnZombieFromNetwork(zombieId: String, zombieTypeName: String, row: Int) {
+        val zombieImage = ImageView(this).apply {
+            scaleType = ImageView.ScaleType.FIT_CENTER
 
+            // TODO: change zombie's scale if the zombie is indeed big
+            layoutParams = FrameLayout.LayoutParams(tileWidth * 2, tileHeight * 2)
+
+            elevation = row.toFloat()
+        }
+
+        // Avoids duplicate by checking if a zombie with the same ID already exists in the row
+        if (zombiesByRow[row].any { it.id == zombieId }) return
+
+        val zombie = createZombieByType(zombieId, zombieTypeName, zombieImage)
+        zombiesByRow[row].add(zombie)
+        gameLayout.addView(zombieImage)
+
+        zombieImage.post {
+            val tileIndex = row * cols
+            val tile = gameBoardGrid.getChildAt(tileIndex)
+            zombieImage.y = tile.y + tileHeight + (zombieImage.height / 5)
+            zombieImage.x = gameBoardGrid.x + gameBoardGrid.width.toFloat()
+            startZombieLoop(zombie, row)
+        }
+    }
+
+
+    // -- Event senders --
+
+    private fun sendRequestPlacePlantEvent(row: Int, col: Int, plantTypeName: String) {
+        val event = hashMapOf(
+            "type" to "REQUEST_PLACE_PLANT",
+            "row" to row,
+            "col" to col,
+            "plantType" to plantTypeName,
+            "senderId" to FirebaseAuth.getInstance().currentUser!!.uid,
+            "timestamp" to FieldValue.serverTimestamp()
+        )
+
+        addEvent(event)
+    }
+
+    private fun sendApprovedPlantEvent(row: Int, col: Int, plantTypeName: String) {
+        val event = hashMapOf(
+            "type" to "PLACE_PLANT",
+            "row" to row,
+            "col" to col,
+            "plantType" to plantTypeName,
+            "timestamp" to FieldValue.serverTimestamp()
+        )
+
+        addEvent(event)
+    }
+
+    private fun sendSpawnZombieEvent(zombieId: String, zombieTypeName: String, row: Int) {
+        val event = hashMapOf(
+            "type" to "SPAWN_ZOMBIE",
+            "zombieId" to zombieId,
+            "zombieType" to zombieTypeName,
+            "row" to row,
+            "timestamp" to FieldValue.serverTimestamp()
+        )
+
+        addEvent(event)
+    }
+
+    fun addEvent(event: HashMap<String, Any>) {
+        roomsRef.document(roomCode)
+            .collection("events")
+            .add(event)
+    }
+
+
+
+    // Fetches if the client is also the host at game setup
     fun fetchRoomInfo(roomCode: String) {
         roomsRef.document(roomCode)
             .get()

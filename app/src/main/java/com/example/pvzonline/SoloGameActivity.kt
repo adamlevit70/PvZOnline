@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class SoloGameActivity : AppCompatActivity() {
 
@@ -336,10 +337,13 @@ class SoloGameActivity : AppCompatActivity() {
         // FOR NOW, RANDOMLY SELECT THE ZOMBIE
         val type = ZombieType.entries.random()
 
+        val id = UUID.randomUUID().toString()
+
         val newZombie = when(type) {
             ZombieType.REGULAR -> {
                 zombieImage.setImageResource(R.drawable.zombie)
                 Zombie(
+                    id,
                     zombieImage,
                     50,
                     2f,
@@ -350,6 +354,7 @@ class SoloGameActivity : AppCompatActivity() {
             ZombieType.FOOTBALL -> {
                 zombieImage.setImageResource(R.drawable.zombie_football)
                 Zombie(
+                    id,
                     zombieImage,
                     60,
                     3f,
@@ -360,6 +365,7 @@ class SoloGameActivity : AppCompatActivity() {
             ZombieType.JACKSON -> {
                 zombieImage.setImageResource(R.drawable.zombie_jackson)
                 Zombie(
+                    id,
                     zombieImage,
                     50,
                     4f,
@@ -370,6 +376,7 @@ class SoloGameActivity : AppCompatActivity() {
             ZombieType.YETI -> {
                 zombieImage.setImageResource(R.drawable.zombie_yeti)
                 Zombie(
+                    id,
                     zombieImage,
                     80,
                     2f,
@@ -380,6 +387,7 @@ class SoloGameActivity : AppCompatActivity() {
             ZombieType.GARGANTUAR -> {
                 zombieImage.setImageResource(R.drawable.zombie_gargantuar)
                 Zombie(
+                    id,
                     zombieImage,
                     90,
                     1.5f,
