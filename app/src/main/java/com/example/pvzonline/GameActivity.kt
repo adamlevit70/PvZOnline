@@ -26,6 +26,9 @@ class GameActivity : AppCompatActivity() {
     private val roomsRef = db.collection("rooms")
     private var roomCode: String = ""
 
+    private var hostId: String? = null
+    private var isHost: Boolean = false
+
     enum class PlantType {
         PEASHOOTER, SUNFLOWER, WALLNUT, PUMPFIST
     }
@@ -65,7 +68,11 @@ class GameActivity : AppCompatActivity() {
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         setContentView(R.layout.activity_game)
 
+        // Get the room code from the intent string extra
         roomCode = intent.getStringExtra("ROOM_CODE") ?: ""
+
+        // Fetch room info to find out who is the host
+        fetchRoomInfo(roomCode)
 
         gameBoardGrid = findViewById(R.id.gameBoardGrid)
         gameLayout = findViewById(R.id.gameLayout)
@@ -82,10 +89,12 @@ class GameActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.wallnutPriceText)?.text = getCost(PlantType.WALLNUT).toString()
         findViewById<TextView>(R.id.pumpfistPriceText)?.text = getCost(PlantType.PUMPFIST).toString()
 
+        // Setup game
         setupPlantPicker()
         updateSunUI()
         createBoard()
 
+        // Start listeners for the other player's actions
         if (roomCode.isNotEmpty()) {
             listenToEvents(roomCode)
         }
@@ -114,7 +123,8 @@ class GameActivity : AppCompatActivity() {
         if (selectedPlantType == type) {
             selectedPlantType = null
             changePlantCardAlpha(card, false)
-        } else {
+        }
+        else {
             changePlantCardAlpha(peashooterCard, false)
             changePlantCardAlpha(sunflowerCard, false)
             changePlantCardAlpha(wallnutCard, false)
@@ -173,6 +183,7 @@ class GameActivity : AppCompatActivity() {
                 }
             }
 
+            // Start game loop with sun and zombie spawn
             startZombieSpawnGeneration()
             startSunSpawnGeneration()
         }
@@ -213,14 +224,25 @@ class GameActivity : AppCompatActivity() {
         updateSunUI()
     }
 
+    // When clicking on one tile in the grid, place a plant if possible
     private fun onTileClicked(row: Int, col: Int, plantImage: ImageView) {
+        // Checks if the tile is empty AND we selected a plant in the picker
         if (plantMatrix[row][col] == null && selectedPlantType != null) {
+
+            // Check if we have enough sun points to afford the plant
             val cost = getCost(selectedPlantType!!)
             if (sunPoints >= cost) {
                 if (roomCode.isNotEmpty()) {
-                    sendPlacePlantEvent(roomCode, row, col, selectedPlantType!!.name)
+                    sendRequestPlacePlantEvent(roomCode, row, col, selectedPlantType!!.name)
                 }
             }
+
+            // Clean the picker select after click
+            selectedPlantType = null
+            changePlantCardAlpha(peashooterCard, false)
+            changePlantCardAlpha(sunflowerCard, false)
+            changePlantCardAlpha(wallnutCard, false)
+            changePlantCardAlpha(pumpfistCard, false)
         }
     }
 
@@ -228,17 +250,11 @@ class GameActivity : AppCompatActivity() {
         if(plantMatrix[row][col] == null && selectedPlantType != null) {
             val newPlant = createPlantByType(plantImage, selectedPlantType!!.name)
             if(newPlant != null) {
-                val cost = getCost(selectedPlantType!!)
-                addSunPoints(-cost)
+
                 plantMatrix[row][col] = newPlant
                 plantImage.visibility = ImageView.VISIBLE
                 newPlant.start(row)
-                
-                selectedPlantType = null
-                changePlantCardAlpha(peashooterCard, false)
-                changePlantCardAlpha(sunflowerCard, false)
-                changePlantCardAlpha(wallnutCard, false)
-                changePlantCardAlpha(pumpfistCard, false)
+
             }
         }
     }
@@ -404,17 +420,36 @@ class GameActivity : AppCompatActivity() {
     private fun handleEvent(event: DocumentSnapshot) {
         val type = event.getString("type")
 
+        if (type == "REQUEST_PLACE_PLANT") {
+            // HOST AUTHORITY (the host approves the placement)
+            if (isHost) {
+                // Event must have a sender
+                if (event.getString("senderId") == null) {
+                    return
+                }
+
+                val row = event.getLong("row")!!.toInt()
+                val col = event.getLong("col")!!.toInt()
+                val plantTypeName = event.getString("plantType")!!
+
+                if (plantMatrix[row][col] == null) {
+                    sendApprovedPlantEvent(row, col, plantTypeName)
+                }
+            }
+        }
+
         if (type == "PLACE_PLANT") {
             val row = event.getLong("row")!!.toInt()
             val col = event.getLong("col")!!.toInt()
             val plantTypeName = event.getString("plantType")!!
+
             placePlantFromNetwork(row, col, plantTypeName)
         }
     }
 
-    private fun sendPlacePlantEvent(roomCode: String, row: Int, col: Int, plantTypeName: String) {
+    private fun sendRequestPlacePlantEvent(roomCode: String, row: Int, col: Int, plantTypeName: String) {
         val event = hashMapOf(
-            "type" to "PLACE_PLANT",
+            "type" to "REQUEST_PLACE_PLANT",
             "row" to row,
             "col" to col,
             "plantType" to plantTypeName,
@@ -427,6 +462,21 @@ class GameActivity : AppCompatActivity() {
             .add(event)
     }
 
+    fun sendApprovedPlantEvent(row: Int, col: Int, plantTypeName: String) {
+        val event = hashMapOf(
+            "type" to "PLACE_PLANT",
+            "row" to row,
+            "col" to col,
+            "plantType" to plantTypeName,
+            "timestamp" to FieldValue.serverTimestamp()
+        )
+
+        roomsRef.document(roomCode)
+            .collection("events")
+            .add(event)
+    }
+
+
     private fun placePlantFromNetwork(row: Int, col: Int, plantTypeName: String) {
         if (plantMatrix[row][col] != null) return
 
@@ -436,9 +486,26 @@ class GameActivity : AppCompatActivity() {
         
         val newPlant = createPlantByType(plantImage, plantTypeName)
         if (newPlant != null) {
+
+            // TEMP: Both players lose suns
+            //val cost = getCost(selectedPlantType!!)
+            //addSunPoints(-cost)
+
             plantMatrix[row][col] = newPlant
             plantImage.visibility = ImageView.VISIBLE
             newPlant.start(row)
         }
+    }
+
+
+    fun fetchRoomInfo(roomCode: String) {
+        roomsRef.document(roomCode)
+            .get()
+            .addOnSuccessListener { document ->
+                hostId = document.getString("hostId")
+
+                val currentUserId = FirebaseAuth.getInstance().currentUser!!.uid
+                isHost = (currentUserId == hostId)
+            }
     }
 }
