@@ -44,12 +44,6 @@ class SoloGameActivity : AppCompatActivity() {
     private var tileWidth : Int = 0
     private var gameEnded : Boolean = false
 
-    /*
-        *
-        IMPORTANT: When switching to online, REMOVE ALL THE RANDOM
-        *
-     */
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
