@@ -196,7 +196,7 @@ class GameActivity : AppCompatActivity() {
     private fun startZombieSpawnGeneration() {
         lifecycleScope.launch {
             while(!gameEnded) {
-                val spawnDelay = (4000..5000).random()
+                val spawnDelay = (6000..7000).random()
                 val spawnRow = (0..4).random()
                 delay(spawnDelay.toLong())
 
@@ -261,19 +261,47 @@ class GameActivity : AppCompatActivity() {
         val newPlant = when(type) {
             PlantType.PEASHOOTER -> {
                 plantImage.setImageResource(R.drawable.plant_peashooter)
-                ShooterPlant(plantImage, 20, 2000, 100, gameLayout, ::getClosestZombieInFront, 0f)
+                ShooterPlant(
+                    plantImage,
+                    20,
+                    2000,
+                    100,
+                    gameLayout,
+                    ::getClosestZombieInFront,
+                    0f
+                )
             }
             PlantType.SUNFLOWER -> {
                 plantImage.setImageResource(R.drawable.plant_sunflower)
-                SunflowerPlant(plantImage, 5000, 100, gameLayout, ::addSunPoints)
+                SunflowerPlant(
+                    plantImage,
+                    5000,
+                    100,
+                    gameLayout,
+                    ::addSunPoints
+                )
             }
             PlantType.WALLNUT -> {
                 plantImage.setImageResource(R.drawable.plant_wallnut)
-                Plant(plantImage, 0, 1000, 4000, gameLayout)
+                Plant(
+                    plantImage,
+                    0,
+                    1000,
+                    4000,
+                    gameLayout
+                )
             }
             PlantType.PUMPFIST -> {
                 plantImage.setImageResource(R.drawable.plant_pumpfist)
-                MeleePlant(plantImage, 100, 750, 100, gameLayout, ::getClosestZombieInFront, 1f)
+                MeleePlant(
+                    plantImage,
+                    100,
+                    750,
+                    100,
+                    gameLayout,
+                    ::getClosestZombieInFront,
+                    1f
+                )
             }
         }
         return newPlant
@@ -301,7 +329,8 @@ class GameActivity : AppCompatActivity() {
                     50,
                     2f,
                     1000,
-                    100
+                    100,
+                    ::sendZombieDamagedEvent
                 )
             }
             ZombieType.FOOTBALL -> {
@@ -312,7 +341,8 @@ class GameActivity : AppCompatActivity() {
                     60,
                     3f,
                     1000,
-                    400
+                    400,
+                    ::sendZombieDamagedEvent
                 )
             }
             ZombieType.JACKSON -> {
@@ -323,7 +353,8 @@ class GameActivity : AppCompatActivity() {
                     50,
                     4f,
                     800,
-                    300
+                    300,
+                    ::sendZombieDamagedEvent
                 )
             }
             ZombieType.YETI -> {
@@ -334,7 +365,8 @@ class GameActivity : AppCompatActivity() {
                     80,
                     2f,
                     1200,
-                    500
+                    500,
+                    ::sendZombieDamagedEvent
                 )
             }
             ZombieType.GARGANTUAR -> {
@@ -345,7 +377,8 @@ class GameActivity : AppCompatActivity() {
                     90,
                     1.5f,
                     1500,
-                    800
+                    800,
+                    ::sendZombieDamagedEvent
                 )
             }
         }
@@ -360,7 +393,7 @@ class GameActivity : AppCompatActivity() {
         val runnable = object : Runnable {
             override fun run() {
                 if(zombie.isDead()) {
-                    zombiesByRow[row].remove(zombie)
+                    sendZombieDiedEvent(zombie.id)
                     return
                 }
                 if (gameEnded) return
@@ -383,12 +416,12 @@ class GameActivity : AppCompatActivity() {
                             speed = 0f
                             zombieImage.postDelayed({
                                 if(!zombie.isDead()) {
+                                    // Only host calculates actions (damage from both sides)
                                     if(isHost) {
-                                        zombie.attack(plant)
+                                        zombie.attack(plant)  // zombie attacks plant
 
                                         if (plant.hp <= 0) {
-                                            plantMatrix[row][col] = null
-                                            //sendPlantRemovedEvent(...)
+                                            sendPlantDiedEvent(row, col)
                                         }
                                     }
 
@@ -412,12 +445,43 @@ class GameActivity : AppCompatActivity() {
                 plant?.pause()
             }
         }
+
+        // Disabling all buttons
+        peashooterCard.isEnabled = false
+        sunflowerCard.isEnabled = false
+        wallnutCard.isEnabled = false
+        pumpfistCard.isEnabled = false
+
+        // Clean the picker select
+        selectedPlantType = null
+        changePlantCardAlpha(peashooterCard, false)
+        changePlantCardAlpha(sunflowerCard, false)
+        changePlantCardAlpha(wallnutCard, false)
+        changePlantCardAlpha(pumpfistCard, false)
     }
 
     private fun getClosestZombieInFront(row: Int, posX: Float): Zombie? {
         return zombiesByRow[row]
             .filter { it.zombieImage.x + it.zombieImage.width > posX }
             .minByOrNull { it.zombieImage.x }
+    }
+
+
+    // Searches for a zombie by id, returns null if not found
+    fun findZombieById(id: String): Zombie? {
+        zombiesByRow.forEach { row ->
+            row.find { it.id == id }?.let { return it }
+        }
+        return null
+    }
+    // Searches for a zombie with given object and returns true if removed one
+    fun removeZombie(zombie: Zombie): Boolean {
+        zombiesByRow.forEach { row ->
+            if (row.remove(zombie)) {
+                return true
+            }
+        }
+        return false
     }
 
 
@@ -472,12 +536,39 @@ class GameActivity : AppCompatActivity() {
             placePlantFromNetwork(row, col, plantTypeName)
         }
 
+        if (type == "PLANT_DIED") {
+            val row = event.getLong("row")!!.toInt()
+            val col = event.getLong("col")!!.toInt()
+
+            val plant = plantMatrix[row][col]
+            plant?.dead()
+            plantMatrix[row][col] = null
+        }
+
         if(type == "SPAWN_ZOMBIE") {
             val row = event.getLong("row")!!.toInt()
             val zombieId = event.getString("zombieId")!!
             val zombieTypeName = event.getString("zombieType")!!
 
             spawnZombieFromNetwork(zombieId, zombieTypeName, row)
+        }
+
+        if (type == "ZOMBIE_DAMAGED") {
+            val zombieId = event.getString("zombieId")!!
+            val hp = event.getLong("hp")!!.toInt()
+
+            // Update zombie's hp after damage (if found)
+            val zombie = findZombieById(zombieId) ?: return
+            zombie.hp = hp
+        }
+
+        if (type == "ZOMBIE_DIED") {
+            val zombieId = event.getString("zombieId")!!
+
+            // Searches for the zombie by id and kills it (if found)
+            val zombie = findZombieById(zombieId) ?: return
+            zombie.dead()
+            removeZombie(zombie)
         }
     }
 
@@ -556,6 +647,36 @@ class GameActivity : AppCompatActivity() {
         addEvent(event)
     }
 
+    private fun sendPlantDamagedEvent(row: Int, col: Int, newHp: Int) {
+        if(!isHost) return  // Cannot run this function if not authority
+
+        if (newHp <= 0) {
+            sendPlantDiedEvent(row, col)
+            return
+        }
+
+        val event = hashMapOf(
+            "type" to "PLANT_DAMAGED",
+            "row" to row,
+            "col" to col,
+            "hp" to newHp,
+            "timestamp" to FieldValue.serverTimestamp()
+        )
+
+        addEvent(event)
+    }
+
+    private fun sendPlantDiedEvent(row: Int, col: Int) {
+        val event = hashMapOf(
+            "type" to "PLANT_DIED",
+            "row" to row,
+            "col" to col,
+            "timestamp" to FieldValue.serverTimestamp()
+        )
+
+        addEvent(event)
+    }
+
     private fun sendSpawnZombieEvent(zombieId: String, zombieTypeName: String, row: Int) {
         val event = hashMapOf(
             "type" to "SPAWN_ZOMBIE",
@@ -567,6 +688,35 @@ class GameActivity : AppCompatActivity() {
 
         addEvent(event)
     }
+
+    fun sendZombieDamagedEvent(zombieId: String, newHp: Int) {
+        if(!isHost) return  // Cannot run this function if not authority
+
+        if (newHp <= 0) {
+            sendZombieDiedEvent(zombieId)
+            return
+        }
+
+        val event = hashMapOf(
+            "type" to "ZOMBIE_DAMAGED",
+            "zombieId" to zombieId,
+            "hp" to newHp,
+            "timestamp" to FieldValue.serverTimestamp()
+        )
+
+        addEvent(event)
+    }
+
+    fun sendZombieDiedEvent(zombieId: String) {
+        val event = hashMapOf(
+            "type" to "ZOMBIE_DIED",
+            "zombieId" to zombieId,
+            "timestamp" to FieldValue.serverTimestamp()
+        )
+
+        addEvent(event)
+    }
+
 
     fun addEvent(event: HashMap<String, Any>) {
         roomsRef.document(roomCode)

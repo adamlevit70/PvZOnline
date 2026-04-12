@@ -14,7 +14,7 @@ open class LivingEntity(
         hp -= dmg
         if (hp <= 0) {
             hp = 0
-            dead()
+            // Do not call dead() func yet (for multiplayer sync purposes)
         }
     }
 
