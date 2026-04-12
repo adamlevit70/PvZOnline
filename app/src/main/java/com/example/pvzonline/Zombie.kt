@@ -28,7 +28,5 @@ class Zombie(
         else {
             super.takeDmg(dmg)
         }
-
-
     }
 }

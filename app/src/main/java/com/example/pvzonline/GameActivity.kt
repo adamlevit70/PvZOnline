@@ -54,7 +54,7 @@ class GameActivity : AppCompatActivity() {
     private lateinit var sunCounterText: TextView
     private var tileHeight : Int = 0
     private var tileWidth : Int = 0
-    private var gameEnded : Boolean = false
+    private var gameEndedLocally : Boolean = false
 
 
     /*
@@ -195,7 +195,7 @@ class GameActivity : AppCompatActivity() {
     // Keep spawning zombies as long as the game is running (enters here only if host)
     private fun startZombieSpawnGeneration() {
         lifecycleScope.launch {
-            while(!gameEnded) {
+            while(!gameEndedLocally) {
                 val spawnDelay = (6000..7000).random()
                 val spawnRow = (0..4).random()
                 delay(spawnDelay.toLong())
@@ -212,7 +212,7 @@ class GameActivity : AppCompatActivity() {
     private fun startSunSpawnGeneration() {
         lifecycleScope.launch {
             delay((3000..6000).random().toLong())
-            while (!gameEnded) {
+            while (!gameEndedLocally) {
                 spawnSun()
                 delay((3000..6000).random().toLong())
             }
@@ -396,12 +396,17 @@ class GameActivity : AppCompatActivity() {
                     sendZombieDiedEvent(zombie.id)
                     return
                 }
-                if (gameEnded) return
+                if (gameEndedLocally) return
+
+                // Zombie keeps moving as long as not attacking
                 if (!isAttacking) {
                     zombieImage.x -= speed
                 }
+                // End game condition (reached the end of the grid board) ONLY FOR AUTHORITY
                 if((zombieImage.x) < gameBoardGrid.x - 10) {
-                    endGame()
+                    if(isHost) {
+                        sendGameEndedEvent()
+                    }
                     return
                 }
 
@@ -439,7 +444,9 @@ class GameActivity : AppCompatActivity() {
     }
 
     private fun endGame() {
-        gameEnded = true
+        if(gameEndedLocally) return  // Avoid double calls
+        gameEndedLocally = true
+
         for (row in plantMatrix) {
             for (plant in row) {
                 plant?.pause()
@@ -570,6 +577,10 @@ class GameActivity : AppCompatActivity() {
             zombie.dead()
             removeZombie(zombie)
         }
+
+        if (type == "GAME_ENDED") {
+            endGame()
+        }
     }
 
 
@@ -647,25 +658,6 @@ class GameActivity : AppCompatActivity() {
         addEvent(event)
     }
 
-    private fun sendPlantDamagedEvent(row: Int, col: Int, newHp: Int) {
-        if(!isHost) return  // Cannot run this function if not authority
-
-        if (newHp <= 0) {
-            sendPlantDiedEvent(row, col)
-            return
-        }
-
-        val event = hashMapOf(
-            "type" to "PLANT_DAMAGED",
-            "row" to row,
-            "col" to col,
-            "hp" to newHp,
-            "timestamp" to FieldValue.serverTimestamp()
-        )
-
-        addEvent(event)
-    }
-
     private fun sendPlantDiedEvent(row: Int, col: Int) {
         val event = hashMapOf(
             "type" to "PLANT_DIED",
@@ -711,6 +703,15 @@ class GameActivity : AppCompatActivity() {
         val event = hashMapOf(
             "type" to "ZOMBIE_DIED",
             "zombieId" to zombieId,
+            "timestamp" to FieldValue.serverTimestamp()
+        )
+
+        addEvent(event)
+    }
+
+    fun sendGameEndedEvent() {
+        val event = hashMapOf(
+            "type" to "GAME_ENDED",
             "timestamp" to FieldValue.serverTimestamp()
         )
 
