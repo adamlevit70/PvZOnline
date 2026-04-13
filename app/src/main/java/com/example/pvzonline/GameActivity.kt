@@ -592,22 +592,27 @@ class GameActivity : AppCompatActivity() {
             if (isHost) {
                 val senderId = event.getString("senderId") ?: return  // Event must have a sender
 
-                val amount = event.getLong("amount")!!.toInt()
-                val sunId = event.getString("sunId")!!
+                val amount = event.getLong("amount")?.toInt() ?: return
+                val sunId = event.getString("sunId") ?: return
 
-                sendSunCollectedEvent(sunId, amount, senderId)
+                if(sunsById[sunId] != null) {
+                    // Approve sun collection (because it still exists in-game)
+                    sendSunCollectedEvent(sunId, amount, senderId)
+                }
             }
         }
 
         if(type == "SUN_COLLECTED") {
             val senderId = event.getString("senderId") ?: return  // Event must have a sender
+            val sunId = event.getString("sunId") ?: return
 
-            val sunId = event.getString("sunId")!!
-            sunsById[sunId]?.collectedFromNetwork()  // Disappear the sun from screen
+            val sun = sunsById.remove(sunId) ?: return  // Avoid double calls
+
+            sun.collectedFromNetwork()  // Remove it from screen after collection
 
             // Add sun points to the player who obtained the sun
             if(senderId == FirebaseAuth.getInstance().currentUser!!.uid) {
-                val amount = event.getLong("amount")!!.toInt()
+                val amount = event.getLong("amount")?.toInt() ?: return
                 addSunPoints(amount, sunId)
             }
         }

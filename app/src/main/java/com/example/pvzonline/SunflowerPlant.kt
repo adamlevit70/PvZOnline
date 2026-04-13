@@ -5,6 +5,7 @@ import com.example.pvzonline.Sun
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 /**
  * A plant that generates sun points over time.
@@ -33,20 +34,17 @@ class SunflowerPlant(
         val plantLocation = IntArray(2)
         val parentLocation = IntArray(2)
         image.getLocationOnScreen(plantLocation)
-        parent.getLocationOnScreen(parentLocation)
 
         val xInParent = (plantLocation[0] - parentLocation[0]).toFloat()
         val yInParent = (plantLocation[1] - parentLocation[1]).toFloat()
 
-        // 2. Initialize the Sun object
-        val sun = Sun(parent, onSunCollected)
-
-        // 3. Set starting position
+        // Setup Sun object
+        val sunId = UUID.randomUUID().toString()
         val startX = xInParent + (image.width / 2f)
         val startY = yInParent
         val targetY = yInParent + (image.height * 0.6f) // Drops slightly in front of the plant
 
-        // 4. Trigger the sun's internal spawn logic
-        sun.spawn(startX, startY, targetY)
+        // Trigger the sun's internal spawn logic
+        // TBC....
     }
 }
