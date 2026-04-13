@@ -198,7 +198,7 @@ class SoloGameActivity : AppCompatActivity() {
             val randomX = (0..(gameLayout.width - 150)).random().toFloat()
             val targetY = gameBoardGrid.y + gameBoardGrid.height - 200f
 
-            sun.topSpawn(randomX, targetY)
+            sun.spawn(randomX, 0f, targetY)  // Spawn at top screen
         }
     }
 

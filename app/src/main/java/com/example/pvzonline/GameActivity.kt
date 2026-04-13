@@ -49,19 +49,13 @@ class GameActivity : AppCompatActivity() {
     private lateinit var gameBoardGrid: GridLayout
     private lateinit var gameLayout: FrameLayout
     private val plantMatrix = Array(rows) { arrayOfNulls<Plant>(cols) }
-    val zombiesByRow = Array(rows) { mutableListOf<Zombie>() }
+    val zombiesByRow = Array(rows) { mutableListOf<Zombie>() }  // Holds zombies objects by row
+    val sunsById = mutableMapOf<String, Sun>()  // Holds suns objects by ID
     private var sunPoints = 50
     private lateinit var sunCounterText: TextView
     private var tileHeight : Int = 0
     private var tileWidth : Int = 0
     private var gameEndedLocally : Boolean = false
-
-
-    /*
-        *
-        IMPORTANT: When switching to online, REMOVE ALL THE RANDOM
-        *
-     */
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -213,22 +207,27 @@ class GameActivity : AppCompatActivity() {
         lifecycleScope.launch {
             delay((3000..6000).random().toLong())
             while (!gameEndedLocally) {
-                spawnSun()
-                delay((3000..6000).random().toLong())
+                val sunId = UUID.randomUUID().toString()
+                val randomX = (0..(gameLayout.width - 150)).random().toFloat()
+                val targetY = gameBoardGrid.y + gameBoardGrid.height - 200f
+
+                sendSpawnSunEvent(sunId, randomX, 0f, targetY)  // Spawn at the top screen
+
+                delay((4000..6000).random().toLong())
             }
         }
     }
 
-    private fun spawnSun() {
-        val sun = Sun(gameLayout, ::sendRequestCollectSunEvent)
+    // The function that creates suns and spawn them on the screen
+    private fun spawnSun(sunId: String, startX: Float, startY: Float, targetY: Float) {
+        val sun = Sun(gameLayout, ::sendRequestCollectSunEvent, sunId)
         gameLayout.post {
-            val randomX = (0..(gameLayout.width - 150)).random().toFloat()
-            val targetY = gameBoardGrid.y + gameBoardGrid.height - 200f
-            sun.topSpawn(randomX, targetY)
+            sun.spawn(startX, startY, targetY)
+            sunsById[sunId] = sun
         }
     }
 
-    private fun addSunPoints(amount: Int) {
+    private fun addSunPoints(amount: Int, id: String) {
         sunPoints += amount
         updateSunUI()
     }
@@ -278,7 +277,7 @@ class GameActivity : AppCompatActivity() {
                     5000,
                     100,
                     gameLayout,
-                    ::addSunPoints
+                    ::sendRequestCollectSunEvent
                 )
             }
             PlantType.WALLNUT -> {
@@ -579,7 +578,13 @@ class GameActivity : AppCompatActivity() {
         }
 
         if(type == "SPAWN_SUN") {
-            spawnSun()
+            val startX = event.getDouble("position.startX")!!.toFloat()
+            val startY = event.getDouble("position.startY")!!.toFloat()
+            val targetY = event.getDouble("position.targetY")!!.toFloat()
+
+            val sunId = event.getString("sunId")!!
+
+            spawnSun(sunId, startX, startY, targetY)
         }
 
         if(type == "REQUEST_COLLECT_SUN") {
@@ -590,12 +595,21 @@ class GameActivity : AppCompatActivity() {
                 val amount = event.getLong("amount")!!.toInt()
                 val sunId = event.getString("sunId")!!
 
-                sendSunCollectedEvent(sunId, amount, event.getString("senderId")!!)
+                sendSunCollectedEvent(sunId, amount, senderId)
             }
         }
 
         if(type == "SUN_COLLECTED") {
+            val senderId = event.getString("senderId") ?: return  // Event must have a sender
+
             val sunId = event.getString("sunId")!!
+            sunsById[sunId]?.collectedFromNetwork()  // Disappear the sun from screen
+
+            // Add sun points to the player who obtained the sun
+            if(senderId == FirebaseAuth.getInstance().currentUser!!.uid) {
+                val amount = event.getLong("amount")!!.toInt()
+                addSunPoints(amount, sunId)
+            }
         }
 
         if (type == "GAME_ENDED") {
@@ -729,17 +743,22 @@ class GameActivity : AppCompatActivity() {
         addEvent(event)
     }
 
-    fun sendSpawnSunEvent(sunId: String) {
+    fun sendSpawnSunEvent(sunId: String, startX: Float, startY: Float, targetY: Float) {
         val event = hashMapOf(
             "type" to "SPAWN_SUN",
             "sunId" to sunId,
+            "position" to hashMapOf(
+                "startX" to startX.toDouble(),
+                "startY" to startY.toDouble(),
+                "targetY" to targetY.toDouble()
+            ),
             "timestamp" to FieldValue.serverTimestamp()
         )
 
         addEvent(event)  // Only host sends this event
     }
 
-    fun sendRequestCollectSunEvent(amount: Int,sunId: String) {
+    fun sendRequestCollectSunEvent(amount: Int, sunId: String) {
         val event = hashMapOf(
             "type" to "REQUEST_COLLECT_SUN",
             "amount" to amount,

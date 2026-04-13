@@ -14,7 +14,7 @@ class SunflowerPlant(
     cooldownMs: Long,
     hp: Int,
     parent: FrameLayout,
-    private val onSunCollected: (Int) -> Unit
+    private val onSunCollected: (Int, String) -> Unit
 ) : Plant(plantImage, 0, cooldownMs, hp, parent) {
 
     override fun start(row: Int) {

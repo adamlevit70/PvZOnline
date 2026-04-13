@@ -7,12 +7,12 @@ import java.util.UUID
 
 class Sun(
     private val parent: FrameLayout,
-    private val onCollected: (amount: Int, id: String?) -> Unit
+    private val onCollected: (amount: Int, id: String) -> Unit,
+    private val id: String = ""
 ) {
 
     val imageView = ImageView(parent.context)
     private val value = 25
-    private val id = UUID.randomUUID().toString()
 
     init {
         imageView.setImageResource(R.drawable.sun)
@@ -31,22 +31,6 @@ class Sun(
         }
     }
 
-    fun topSpawn(startX: Float, targetY: Float) {
-        // Spawn the sun at the top of the screen
-        imageView.x = startX
-        imageView.y = 0f
-
-        // Animate the fall of the sun
-        imageView.animate()
-            .translationY(targetY)
-            .setDuration(3000)
-            .setInterpolator(LinearInterpolator())
-            .withEndAction {
-                scheduleDespawn()  // Schedule despawn
-            }
-            .start()
-    }
-
     fun spawn(startX: Float, startY: Float, targetY: Float) {
         // Spawn the sun at the top of the screen
         imageView.x = startX
@@ -63,23 +47,9 @@ class Sun(
             .start()
     }
 
-    // Only for singleplayer
+    // Works for both singleplayer and multiplayer (but ID won't be relevant in singleplayer)
     private fun collect() {
         // When collected, animate a fade out for the sun View
-        imageView.animate()
-            .scaleX(0f)
-            .scaleY(0f)
-            .alpha(0f)
-            .setDuration(200)
-            .withEndAction {
-                parent.removeView(imageView)
-                onCollected(value, null)
-            }
-            .start()
-    }
-
-    // Only for multiplayer (does the same as singleplayer, but not responsible here locally)
-    private fun collectFromNetwork() {
         imageView.animate()
             .scaleX(0f)
             .scaleY(0f)
@@ -92,7 +62,20 @@ class Sun(
             .start()
     }
 
+    // Called from firebase and just animates (was not the one that collected the sun)
+    fun collectedFromNetwork() {
+        imageView.animate()
+            .scaleX(0f)
+            .scaleY(0f)
+            .alpha(0f)
+            .setDuration(200)
+            .withEndAction {
+                parent.removeView(imageView)
+            }
+            .start()
+    }
 
+    // Despawn handler
     private fun scheduleDespawn() {
         val delay: Long = 5000
 
