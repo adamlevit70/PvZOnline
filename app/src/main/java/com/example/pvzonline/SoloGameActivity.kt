@@ -202,7 +202,7 @@ class SoloGameActivity : AppCompatActivity() {
         }
     }
 
-    private fun addSunPoints(amount: Int) {
+    private fun addSunPoints(amount: Int, id: String? = null) {
         sunPoints += amount
         updateSunUI()
     }

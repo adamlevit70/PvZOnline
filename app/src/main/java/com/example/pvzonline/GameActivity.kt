@@ -220,7 +220,7 @@ class GameActivity : AppCompatActivity() {
     }
 
     private fun spawnSun() {
-        val sun = Sun(gameLayout, ::addSunPoints)
+        val sun = Sun(gameLayout, ::sendRequestCollectSunEvent)
         gameLayout.post {
             val randomX = (0..(gameLayout.width - 150)).random().toFloat()
             val targetY = gameBoardGrid.y + gameBoardGrid.height - 200f
@@ -403,7 +403,7 @@ class GameActivity : AppCompatActivity() {
                     zombieImage.x -= speed
                 }
                 // End game condition (reached the end of the grid board) ONLY FOR AUTHORITY
-                if((zombieImage.x) < gameBoardGrid.x - 10) {
+                if((zombieImage.x) < gameBoardGrid.x) {
                     if(isHost) {
                         sendGameEndedEvent()
                     }
@@ -530,7 +530,7 @@ class GameActivity : AppCompatActivity() {
                 val plantTypeName = event.getString("plantType")!!
 
                 if (plantMatrix[row][col] == null) {
-                    sendApprovedPlantEvent(row, col, plantTypeName)
+                    sendApprovedPlacePlantEvent(row, col, plantTypeName)
                 }
             }
         }
@@ -576,6 +576,26 @@ class GameActivity : AppCompatActivity() {
             val zombie = findZombieById(zombieId) ?: return
             zombie.dead()
             removeZombie(zombie)
+        }
+
+        if(type == "SPAWN_SUN") {
+            spawnSun()
+        }
+
+        if(type == "REQUEST_COLLECT_SUN") {
+            // HOST AUTHORITY (the host approves the placement)
+            if (isHost) {
+                val senderId = event.getString("senderId") ?: return  // Event must have a sender
+
+                val amount = event.getLong("amount")!!.toInt()
+                val sunId = event.getString("sunId")!!
+
+                sendSunCollectedEvent(sunId, amount, event.getString("senderId")!!)
+            }
+        }
+
+        if(type == "SUN_COLLECTED") {
+            val sunId = event.getString("sunId")!!
         }
 
         if (type == "GAME_ENDED") {
@@ -646,7 +666,7 @@ class GameActivity : AppCompatActivity() {
         addEvent(event)
     }
 
-    private fun sendApprovedPlantEvent(row: Int, col: Int, plantTypeName: String) {
+    private fun sendApprovedPlacePlantEvent(row: Int, col: Int, plantTypeName: String) {
         val event = hashMapOf(
             "type" to "PLACE_PLANT",
             "row" to row,
@@ -678,7 +698,7 @@ class GameActivity : AppCompatActivity() {
             "timestamp" to FieldValue.serverTimestamp()
         )
 
-        addEvent(event)
+        addEvent(event)  // Only host sends this event
     }
 
     fun sendZombieDamagedEvent(zombieId: String, newHp: Int) {
@@ -703,6 +723,42 @@ class GameActivity : AppCompatActivity() {
         val event = hashMapOf(
             "type" to "ZOMBIE_DIED",
             "zombieId" to zombieId,
+            "timestamp" to FieldValue.serverTimestamp()
+        )
+
+        addEvent(event)
+    }
+
+    fun sendSpawnSunEvent(sunId: String) {
+        val event = hashMapOf(
+            "type" to "SPAWN_SUN",
+            "sunId" to sunId,
+            "timestamp" to FieldValue.serverTimestamp()
+        )
+
+        addEvent(event)  // Only host sends this event
+    }
+
+    fun sendRequestCollectSunEvent(amount: Int,sunId: String) {
+        val event = hashMapOf(
+            "type" to "REQUEST_COLLECT_SUN",
+            "amount" to amount,
+            "sunId" to sunId,
+            "senderId" to FirebaseAuth.getInstance().currentUser!!.uid,
+            "timestamp" to FieldValue.serverTimestamp()
+        )
+
+        addEvent(event)
+    }
+
+    fun sendSunCollectedEvent(sunId: String, amount: Int, senderId: String) {
+        if (!isHost) return  // Cannot run this function if not authority
+
+        val event = hashMapOf(
+            "type" to "SUN_COLLECTED",
+            "amount" to amount,
+            "sunId" to sunId,
+            "senderId" to senderId,
             "timestamp" to FieldValue.serverTimestamp()
         )
 

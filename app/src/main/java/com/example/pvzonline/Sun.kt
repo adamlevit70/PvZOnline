@@ -3,14 +3,16 @@ package com.example.pvzonline
 import android.view.animation.LinearInterpolator
 import android.widget.FrameLayout
 import android.widget.ImageView
+import java.util.UUID
 
 class Sun(
     private val parent: FrameLayout,
-    private val onCollected: (amount: Int) -> Unit
+    private val onCollected: (amount: Int, id: String?) -> Unit
 ) {
 
     val imageView = ImageView(parent.context)
     private val value = 25
+    private val id = UUID.randomUUID().toString()
 
     init {
         imageView.setImageResource(R.drawable.sun)
@@ -40,7 +42,7 @@ class Sun(
             .setDuration(3000)
             .setInterpolator(LinearInterpolator())
             .withEndAction {
-                scheduleDespawn()  // Schedule dispawn
+                scheduleDespawn()  // Schedule despawn
             }
             .start()
     }
@@ -61,6 +63,7 @@ class Sun(
             .start()
     }
 
+    // Only for singleplayer
     private fun collect() {
         // When collected, animate a fade out for the sun View
         imageView.animate()
@@ -70,7 +73,21 @@ class Sun(
             .setDuration(200)
             .withEndAction {
                 parent.removeView(imageView)
-                onCollected(value)
+                onCollected(value, null)
+            }
+            .start()
+    }
+
+    // Only for multiplayer (does the same as singleplayer, but not responsible here locally)
+    private fun collectFromNetwork() {
+        imageView.animate()
+            .scaleX(0f)
+            .scaleY(0f)
+            .alpha(0f)
+            .setDuration(200)
+            .withEndAction {
+                parent.removeView(imageView)
+                onCollected(value, id)
             }
             .start()
     }

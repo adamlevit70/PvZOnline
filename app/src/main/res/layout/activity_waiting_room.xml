@@ -18,12 +18,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
         android:text="ROOM CODE: ______"
-        android:textSize="36sp" />
-
-    <View
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:textSize="36sp"
+        android:layout_marginBottom="40dp"/>
 
     <!-- PLAYERS PANEL -->
     <LinearLayout

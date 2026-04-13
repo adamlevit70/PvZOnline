@@ -26,7 +26,7 @@
             android:hint="ENTER CODE"
             android:maxLength="6"
             android:maxLines="1"
-            android:inputType="textCapCharacters"
+            android:inputType="text"
             android:textColorHint="#80FFFFFF"
             android:gravity="center"
             android:background="@null"

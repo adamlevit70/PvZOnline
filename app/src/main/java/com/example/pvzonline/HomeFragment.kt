@@ -84,7 +84,7 @@ class HomeFragment : Fragment() {
     // Generates 6 chars long code to join the hosted room
     fun generateRoomCode(): String {
         val length : Int = 6
-        val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        val chars = "abcdefghijklmnopqrstuvwxyz0123456789"
         return (1..length)
             .map { chars.random() }
             .joinToString("")
