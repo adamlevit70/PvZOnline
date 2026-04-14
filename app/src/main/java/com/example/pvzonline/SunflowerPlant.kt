@@ -15,7 +15,7 @@ class SunflowerPlant(
     cooldownMs: Long,
     hp: Int,
     parent: FrameLayout,
-    private val onSunCollected: (Int, String) -> Unit
+    private val spawnSun: (sunId: String, startX: Float, startY: Float, targetY: Float) -> Unit
 ) : Plant(plantImage, 0, cooldownMs, hp, parent) {
 
     override fun start(row: Int) {
@@ -44,7 +44,7 @@ class SunflowerPlant(
         val startY = yInParent
         val targetY = yInParent + (image.height * 0.6f) // Drops slightly in front of the plant
 
-        // Trigger the sun's internal spawn logic
-        // TBC....
+        // Trigger sun's spawn
+        spawnSun.invoke(sunId, startX, startY, targetY)
     }
 }

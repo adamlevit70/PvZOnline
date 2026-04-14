@@ -277,7 +277,7 @@ class GameActivity : AppCompatActivity() {
                     5000,
                     100,
                     gameLayout,
-                    ::sendRequestCollectSunEvent
+                    ::sendSpawnSunEvent
                 )
             }
             PlantType.WALLNUT -> {
@@ -402,7 +402,7 @@ class GameActivity : AppCompatActivity() {
                     zombieImage.x -= speed
                 }
                 // End game condition (reached the end of the grid board) ONLY FOR AUTHORITY
-                if((zombieImage.x) < gameBoardGrid.x) {
+                if((zombieImage.x) < gameBoardGrid.x - 20f) {
                     if(isHost) {
                         sendGameEndedEvent()
                     }
@@ -749,6 +749,8 @@ class GameActivity : AppCompatActivity() {
     }
 
     fun sendSpawnSunEvent(sunId: String, startX: Float, startY: Float, targetY: Float) {
+        if(!isHost) return  // Cannot run this function if not authority (and avoids duplicate)
+
         val event = hashMapOf(
             "type" to "SPAWN_SUN",
             "sunId" to sunId,

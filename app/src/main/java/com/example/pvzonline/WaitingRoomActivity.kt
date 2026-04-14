@@ -113,15 +113,48 @@ class WaitingRoomActivity : AppCompatActivity() {
         val textGuestPlayer = findViewById<TextView>(R.id.textGuestPlayer)
 
         if (hostId == userId) {
-            textHostPlayer.text = "Host: You"
-            textGuestPlayer.text = if (guestId == null) {
-                "Guest: Waiting for player..."
-            } else {
-                "Guest: Connected"
+            // Host = You
+            getUserLevel(userId) { level ->
+                textHostPlayer.text = "Host: You (Lv. ${level ?: "?"})"
             }
+
+            if (guestId == null) {
+                textGuestPlayer.text = "Guest: Waiting for player..."
+            } else {
+                getUserLevel(guestId) { level ->
+                    textGuestPlayer.text = "Guest: Connected (Lv. ${level ?: "?"})"
+                }
+            }
+
         } else {
-            textHostPlayer.text = "Host: Connected"
-            textGuestPlayer.text = "Guest: You"
+            // Guest = You
+            getUserLevel(userId) { level ->
+                textGuestPlayer.text = "Guest: You (Lv. ${level ?: "?"})"
+            }
+
+            if (hostId != null) {
+                getUserLevel(hostId) { level ->
+                    textHostPlayer.text = "Host: Connected (Lv. ${level ?: "?"})"
+                }
+            }
         }
+    }
+
+
+    // Function to get user level from Firestore (if not found, 1 is the default value)
+    fun getUserLevel(uid: String, onResult: (Int?) -> Unit) {
+        db.collection("users").document(uid)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document != null && document.exists()) {
+                    val level = document.getLong("level")?.toInt() ?: 1
+                    onResult(level)
+                } else {
+                    onResult(1)
+                }
+            }
+            .addOnFailureListener {
+                onResult(1)
+            }
     }
 }

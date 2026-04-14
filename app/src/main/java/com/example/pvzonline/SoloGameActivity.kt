@@ -183,22 +183,23 @@ class SoloGameActivity : AppCompatActivity() {
             delay((3000..6000).random().toLong())
 
             while (!gameEnded) {
-                spawnSun()
+                val sunId = UUID.randomUUID().toString()
+                val randomX = (0..(gameLayout.width - 150)).random().toFloat()
+                val targetY = gameBoardGrid.y + gameBoardGrid.height - 200f
+
+                spawnSun(sunId, randomX, 0f, targetY)
                 delay((3000..6000).random().toLong())
             }
         }
     }
 
-    private fun spawnSun() {
+    private fun spawnSun(sunId: String, startX: Float, startY: Float, targetY: Float) {
         // Create Sun class which will add to the total sun points when obtained
-        val sun = Sun(gameLayout, ::addSunPoints)
+        val sun = Sun(gameLayout, ::addSunPoints) // ID is not used in singleplayer
 
         // Spawn sun at random X pos and set its target when falls
         gameLayout.post {
-            val randomX = (0..(gameLayout.width - 150)).random().toFloat()
-            val targetY = gameBoardGrid.y + gameBoardGrid.height - 200f
-
-            sun.spawn(randomX, 0f, targetY)  // Spawn at top screen
+            sun.spawn(startX, startY, targetY)  // Spawn at top screen
         }
     }
 
@@ -253,7 +254,7 @@ class SoloGameActivity : AppCompatActivity() {
                     5000,
                     100,
                     gameLayout,
-                    ::addSunPoints
+                    ::spawnSun
                 )
             }
             PlantType.WALLNUT -> {
