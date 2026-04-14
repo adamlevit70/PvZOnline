@@ -53,6 +53,7 @@ class JoinRoomFragment : Fragment() {
                 return@addOnSuccessListener
             }
 
+            val hostId = document.getString("hostId") ?: false
             val guestId = document.getString("guestId")
             val gameStarted = document.getBoolean("gameStarted") ?: false
 
@@ -60,6 +61,11 @@ class JoinRoomFragment : Fragment() {
                 Toast.makeText(requireContext(), "Room is full or already started", Toast.LENGTH_LONG).show()
                 return@addOnSuccessListener
             }
+            if(hostId == currentUserId) {
+                Toast.makeText(requireContext(), "You cannot join your own room", Toast.LENGTH_LONG).show()
+                return@addOnSuccessListener
+            }
+
 
             roomRef.update(
                 mapOf(

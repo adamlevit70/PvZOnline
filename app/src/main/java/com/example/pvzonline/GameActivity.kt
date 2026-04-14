@@ -648,7 +648,7 @@ class GameActivity : AppCompatActivity() {
             }
 
             "GAME_ENDED" -> {
-                val expectedXp = event.getString("expectedXp")?.toInt() ?: return
+                val expectedXp = event.getLong("expectedXp")?.toInt() ?: return
 
                 endGame(expectedXp)
             }

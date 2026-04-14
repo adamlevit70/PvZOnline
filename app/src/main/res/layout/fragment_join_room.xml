@@ -30,7 +30,8 @@
             android:textColorHint="#80FFFFFF"
             android:gravity="center"
             android:background="@null"
-            android:padding="12dp" />
+            android:textSize="24dp"
+            android:padding="4dp" />
 
         <View
             android:layout_width="match_parent"
