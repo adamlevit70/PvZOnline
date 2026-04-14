@@ -7,6 +7,7 @@ import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.widget.FrameLayout
 import android.widget.GridLayout
 import android.widget.ImageView
@@ -53,6 +54,7 @@ class GameActivity : AppCompatActivity() {
     private lateinit var gameBoardGrid: GridLayout
     private lateinit var gameLayout: FrameLayout
     private val plantMatrix = Array(rows) { arrayOfNulls<Plant>(cols) }
+    val plantImageMatrix = Array(rows) { arrayOfNulls<ImageView>(cols) }
     val zombiesByRow = Array(rows) { mutableListOf<Zombie>() }  // Holds zombies objects by row
     val sunsById = mutableMapOf<String, Sun>()  // Holds suns objects by ID
     private var sunPoints = 50
@@ -190,6 +192,8 @@ class GameActivity : AppCompatActivity() {
                     val plantImage = tile.findViewById<ImageView>(R.id.plantImage)
                     plantImage.elevation = row.toFloat()
 
+                    plantImageMatrix[row][col] = plantImage  // Make plantImages accessible by row and col
+
                     tile.setOnClickListener {
                         onTileClicked(row, col, plantImage)
                     }
@@ -272,7 +276,7 @@ class GameActivity : AppCompatActivity() {
                     Handler(Looper.getMainLooper()).postDelayed({
                         isPlacingOnCooldown = false
                         setCardsEnabled(true)
-                    }, 200)
+                    }, 500)
 
                     // Clean the picker select after click
                     selectedPlantType = null
@@ -356,7 +360,7 @@ class GameActivity : AppCompatActivity() {
                     2f,
                     1000,
                     100,
-                    ::sendZombieDamagedEvent
+                    ::zombieDamaged
                 )
             }
             ZombieType.FOOTBALL -> {
@@ -368,7 +372,7 @@ class GameActivity : AppCompatActivity() {
                     3f,
                     1000,
                     400,
-                    ::sendZombieDamagedEvent
+                    ::zombieDamaged
                 )
             }
             ZombieType.JACKSON -> {
@@ -380,7 +384,7 @@ class GameActivity : AppCompatActivity() {
                     4f,
                     800,
                     300,
-                    ::sendZombieDamagedEvent
+                    ::zombieDamaged
                 )
             }
             ZombieType.YETI -> {
@@ -392,7 +396,7 @@ class GameActivity : AppCompatActivity() {
                     2f,
                     1200,
                     500,
-                    ::sendZombieDamagedEvent
+                    ::zombieDamaged
                 )
             }
             ZombieType.GARGANTUAR -> {
@@ -404,7 +408,7 @@ class GameActivity : AppCompatActivity() {
                     1.5f,
                     1500,
                     800,
-                    ::sendZombieDamagedEvent
+                    ::zombieDamaged
                 )
             }
         }
@@ -494,6 +498,14 @@ class GameActivity : AppCompatActivity() {
 
         // Clean the picker select
         selectedPlantType = null
+
+        if(isHost) {
+            val db = FirebaseFirestore.getInstance()
+
+            // Deleting the room events after game ended
+            db.collection("rooms")
+                .document(roomCode)
+        }
     }
 
     private fun getClosestZombieInFront(row: Int, posX: Float): Zombie? {
@@ -587,15 +599,6 @@ class GameActivity : AppCompatActivity() {
                 spawnZombieFromNetwork(zombieId, zombieTypeName, row)
             }
 
-            "ZOMBIE_DAMAGED" -> {
-                val zombieId = event.getString("zombieId") ?: return
-                val hp = event.getLong("hp")?.toInt() ?: return
-
-                // Update zombie's hp after damage (if found)
-                val zombie = findZombieById(zombieId) ?: return
-                zombie.hp = hp
-            }
-
             "ZOMBIE_DIED" -> {
                 val zombieId = event.getString("zombieId") ?: return
 
@@ -625,10 +628,11 @@ class GameActivity : AppCompatActivity() {
                     val amount = sunValue
                     val sunId = event.getString("sunId") ?: return
 
-                    if (sunsById[sunId] != null) {
-                        // Approve sun collection (because it still exists in-game)
-                        sendSunCollectedEvent(sunId, amount, senderId)
-                    }
+                    // Remove it from the screen to avoid duplicate collection
+                    val sun = sunsById.remove(sunId) ?: return
+                    sun.collectedFromNetwork()
+
+                    sendSunCollectedEvent(sunId, amount, senderId)  // Approve sun collection
                 }
             }
 
@@ -636,9 +640,9 @@ class GameActivity : AppCompatActivity() {
                 val senderId = event.getString("senderId") ?: return  // Event must have a sender
                 val sunId = event.getString("sunId") ?: return
 
-                val sun = sunsById.remove(sunId) ?: return  // Avoid double calls
+                val sun = sunsById.remove(sunId)
 
-                sun.collectedFromNetwork()  // Remove it from screen after collection
+                sun?.collectedFromNetwork()  // Remove it from screen afterward (already did if host)
 
                 // Add sun points to the player who obtained the sun
                 if (senderId == FirebaseAuth.getInstance().currentUser!!.uid) {
@@ -660,11 +664,12 @@ class GameActivity : AppCompatActivity() {
         if (plantMatrix[row][col] != null) return
 
         val tileIndex = row * cols + col
-        val tile = gameBoardGrid.getChildAt(tileIndex) as FrameLayout
-        val plantImage = tile.findViewById<ImageView>(R.id.plantImage)
+        val tile = gameBoardGrid.getChildAt(tileIndex) as? FrameLayout ?: return
 
-        val newPlant = createPlantByType(plantImage, plantTypeName)
-        if (newPlant != null) {
+        tile.post {
+            val plantImage = plantImageMatrix[row][col] ?: return@post
+
+            val newPlant = createPlantByType(plantImage, plantTypeName) ?: return@post
 
             // TEMP: Both players lose suns
             //val cost = getCost(selectedPlantType!!)
@@ -700,6 +705,20 @@ class GameActivity : AppCompatActivity() {
             zombieImage.x = gameBoardGrid.x + gameBoardGrid.width.toFloat()
             startZombieLoop(zombie, row)
         }
+    }
+
+    // Run this when zombie takes damage
+    fun zombieDamaged(zombieId: String, newHp: Int) {
+        if(!isHost) return  // Cannot run this function if not authority
+
+        if (newHp <= 0) {
+            sendZombieDiedEvent(zombieId)
+            return
+        }
+
+        // Update zombie's hp after damage (if found)
+        val zombie = findZombieById(zombieId) ?: return
+        zombie.hp = newHp
     }
 
 
@@ -751,24 +770,6 @@ class GameActivity : AppCompatActivity() {
         )
 
         addEvent(event)  // Only host sends this event
-    }
-
-    fun sendZombieDamagedEvent(zombieId: String, newHp: Int) {
-        if(!isHost) return  // Cannot run this function if not authority
-
-        if (newHp <= 0) {
-            sendZombieDiedEvent(zombieId)
-            return
-        }
-
-        val event = hashMapOf(
-            "type" to "ZOMBIE_DAMAGED",
-            "zombieId" to zombieId,
-            "hp" to newHp,
-            "timestamp" to FieldValue.serverTimestamp()
-        )
-
-        addEvent(event)
     }
 
     fun sendZombieDiedEvent(zombieId: String) {
