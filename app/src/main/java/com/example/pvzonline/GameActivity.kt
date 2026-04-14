@@ -5,6 +5,8 @@ import ShooterPlant
 import SunflowerPlant
 import android.content.pm.ActivityInfo
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.widget.FrameLayout
 import android.widget.GridLayout
 import android.widget.ImageView
@@ -43,6 +45,7 @@ class GameActivity : AppCompatActivity() {
     private lateinit var pumpfistCard: ImageView
 
     private var selectedPlantType: PlantType? = null
+    var isPlacingOnCooldown = false
 
     private val rows = 5
     private val cols = 9
@@ -52,6 +55,7 @@ class GameActivity : AppCompatActivity() {
     val zombiesByRow = Array(rows) { mutableListOf<Zombie>() }  // Holds zombies objects by row
     val sunsById = mutableMapOf<String, Sun>()  // Holds suns objects by ID
     private var sunPoints = 50
+    private val sunValue = 25
     private lateinit var sunCounterText: TextView
     private var tileHeight : Int = 0
     private var tileWidth : Int = 0
@@ -137,6 +141,20 @@ class GameActivity : AppCompatActivity() {
         else {
             card.alpha = 1f
         }
+    }
+
+    // Enable or disable all cards at once
+    fun setCardsEnabled(enabled: Boolean) {
+        peashooterCard.isEnabled = enabled
+        sunflowerCard.isEnabled = enabled
+        wallnutCard.isEnabled = enabled
+        pumpfistCard.isEnabled = enabled
+
+        val alpha = if (enabled) 1f else 0.5f
+        peashooterCard.alpha = alpha
+        sunflowerCard.alpha = alpha
+        wallnutCard.alpha = alpha
+        pumpfistCard.alpha = alpha
     }
 
     private fun updateSunUI() {
@@ -234,6 +252,9 @@ class GameActivity : AppCompatActivity() {
 
     // When clicking on one tile in the grid, place a plant if possible
     private fun onTileClicked(row: Int, col: Int, plantImage: ImageView) {
+
+        if (isPlacingOnCooldown) return  // Cooldown between placements
+
         // Checks if the tile is empty AND we selected a plant in the picker
         if (plantMatrix[row][col] == null && selectedPlantType != null) {
 
@@ -241,16 +262,20 @@ class GameActivity : AppCompatActivity() {
             val cost = getCost(selectedPlantType!!)
             if (sunPoints >= cost) {
                 if (roomCode.isNotEmpty()) {
+                    isPlacingOnCooldown = true  // Start cooldown
+                    setCardsEnabled(false)
+
                     sendRequestPlacePlantEvent(row, col, selectedPlantType!!.name)
+
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        isPlacingOnCooldown = false
+                        setCardsEnabled(true)
+                    }, 200)
+
+                    // Clean the picker select after click
+                    selectedPlantType = null
                 }
             }
-
-            // Clean the picker select after click
-            selectedPlantType = null
-            changePlantCardAlpha(peashooterCard, false)
-            changePlantCardAlpha(sunflowerCard, false)
-            changePlantCardAlpha(wallnutCard, false)
-            changePlantCardAlpha(pumpfistCard, false)
         }
     }
 
@@ -453,17 +478,10 @@ class GameActivity : AppCompatActivity() {
         }
 
         // Disabling all buttons
-        peashooterCard.isEnabled = false
-        sunflowerCard.isEnabled = false
-        wallnutCard.isEnabled = false
-        pumpfistCard.isEnabled = false
+        setCardsEnabled(false)
 
         // Clean the picker select
         selectedPlantType = null
-        changePlantCardAlpha(peashooterCard, false)
-        changePlantCardAlpha(sunflowerCard, false)
-        changePlantCardAlpha(wallnutCard, false)
-        changePlantCardAlpha(pumpfistCard, false)
     }
 
     private fun getClosestZombieInFront(row: Int, posX: Float): Zombie? {
@@ -514,111 +532,110 @@ class GameActivity : AppCompatActivity() {
 
     // Handle new events
     private fun handleEvent(event: DocumentSnapshot) {
-        val type = event.getString("type")
+        val type = event.getString("type") ?: return
 
-        if (type == "REQUEST_PLACE_PLANT") {
-            // HOST AUTHORITY (the host approves the placement)
-            if (isHost) {
-                // Event must have a sender
-                if (event.getString("senderId") == null) {
-                    return
-                }
+        when (type) {
+            "REQUEST_PLACE_PLANT" -> {
+                // HOST AUTHORITY (the host approves the placement)
+                if (isHost) {
+                    event.getString("senderId") ?: return  // Must have a sender
 
-                val row = event.getLong("row")!!.toInt()
-                val col = event.getLong("col")!!.toInt()
-                val plantTypeName = event.getString("plantType")!!
+                    val row = event.getLong("row")?.toInt() ?: return
+                    val col = event.getLong("col")?.toInt() ?: return
+                    val plantTypeName = event.getString("plantType") ?: return
 
-                if (plantMatrix[row][col] == null) {
-                    sendApprovedPlacePlantEvent(row, col, plantTypeName)
+                    if (plantMatrix[row][col] == null) {
+                        sendApprovedPlacePlantEvent(row, col, plantTypeName)
+                    }
                 }
             }
-        }
 
-        if (type == "PLACE_PLANT") {
-            val row = event.getLong("row")!!.toInt()
-            val col = event.getLong("col")!!.toInt()
-            val plantTypeName = event.getString("plantType")!!
+            "PLACE_PLANT" -> {
+                val row = event.getLong("row")?.toInt() ?: return
+                val col = event.getLong("col")?.toInt() ?: return
+                val plantTypeName = event.getString("plantType") ?: return
 
-            placePlantFromNetwork(row, col, plantTypeName)
-        }
+                placePlantFromNetwork(row, col, plantTypeName)
+            }
 
-        if (type == "PLANT_DIED") {
-            val row = event.getLong("row")!!.toInt()
-            val col = event.getLong("col")!!.toInt()
+            "PLANT_DIED" -> {
+                val row = event.getLong("row")?.toInt() ?: return
+                val col = event.getLong("col")?.toInt() ?: return
 
-            val plant = plantMatrix[row][col]
-            plant?.dead()
-            plantMatrix[row][col] = null
-        }
+                val plant = plantMatrix[row][col]
+                plant?.dead()
+                plantMatrix[row][col] = null
+            }
 
-        if(type == "SPAWN_ZOMBIE") {
-            val row = event.getLong("row")!!.toInt()
-            val zombieId = event.getString("zombieId")!!
-            val zombieTypeName = event.getString("zombieType")!!
+            "SPAWN_ZOMBIE" -> {
+                val row = event.getLong("row")?.toInt() ?: return
+                val zombieId = event.getString("zombieId") ?: return
+                val zombieTypeName = event.getString("zombieType") ?: return
 
-            spawnZombieFromNetwork(zombieId, zombieTypeName, row)
-        }
+                spawnZombieFromNetwork(zombieId, zombieTypeName, row)
+            }
 
-        if (type == "ZOMBIE_DAMAGED") {
-            val zombieId = event.getString("zombieId")!!
-            val hp = event.getLong("hp")!!.toInt()
+            "ZOMBIE_DAMAGED" -> {
+                val zombieId = event.getString("zombieId") ?: return
+                val hp = event.getLong("hp")?.toInt() ?: return
 
-            // Update zombie's hp after damage (if found)
-            val zombie = findZombieById(zombieId) ?: return
-            zombie.hp = hp
-        }
+                // Update zombie's hp after damage (if found)
+                val zombie = findZombieById(zombieId) ?: return
+                zombie.hp = hp
+            }
 
-        if (type == "ZOMBIE_DIED") {
-            val zombieId = event.getString("zombieId")!!
+            "ZOMBIE_DIED" -> {
+                val zombieId = event.getString("zombieId") ?: return
 
-            // Searches for the zombie by id and kills it (if found)
-            val zombie = findZombieById(zombieId) ?: return
-            zombie.dead()
-            removeZombie(zombie)
-        }
+                // Searches for the zombie by id and kills it (if found)
+                val zombie = findZombieById(zombieId) ?: return
+                zombie.dead()
+                removeZombie(zombie)
+            }
 
-        if(type == "SPAWN_SUN") {
-            val startX = event.getDouble("position.startX")!!.toFloat()
-            val startY = event.getDouble("position.startY")!!.toFloat()
-            val targetY = event.getDouble("position.targetY")!!.toFloat()
+            "SPAWN_SUN" -> {
+                val startX = event.getDouble("position.startX")?.toFloat() ?: return
+                val startY = event.getDouble("position.startY")?.toFloat() ?: return
+                val targetY = event.getDouble("position.targetY")?.toFloat() ?: return
 
-            val sunId = event.getString("sunId")!!
-
-            spawnSun(sunId, startX, startY, targetY)
-        }
-
-        if(type == "REQUEST_COLLECT_SUN") {
-            // HOST AUTHORITY (the host approves the placement)
-            if (isHost) {
-                val senderId = event.getString("senderId") ?: return  // Event must have a sender
-
-                val amount = event.getLong("amount")?.toInt() ?: return
                 val sunId = event.getString("sunId") ?: return
 
-                if(sunsById[sunId] != null) {
-                    // Approve sun collection (because it still exists in-game)
-                    sendSunCollectedEvent(sunId, amount, senderId)
+                spawnSun(sunId, startX, startY, targetY)
+            }
+
+            "REQUEST_COLLECT_SUN" -> {
+                // HOST AUTHORITY (the host approves the placement)
+                if (isHost) {
+                    val senderId = event.getString("senderId") ?: return  // Event must have a sender
+
+                    val amount = sunValue
+                    val sunId = event.getString("sunId") ?: return
+
+                    if (sunsById[sunId] != null) {
+                        // Approve sun collection (because it still exists in-game)
+                        sendSunCollectedEvent(sunId, amount, senderId)
+                    }
                 }
             }
-        }
 
-        if(type == "SUN_COLLECTED") {
-            val senderId = event.getString("senderId") ?: return  // Event must have a sender
-            val sunId = event.getString("sunId") ?: return
+            "SUN_COLLECTED" -> {
+                val senderId = event.getString("senderId") ?: return  // Event must have a sender
+                val sunId = event.getString("sunId") ?: return
 
-            val sun = sunsById.remove(sunId) ?: return  // Avoid double calls
+                val sun = sunsById.remove(sunId) ?: return  // Avoid double calls
 
-            sun.collectedFromNetwork()  // Remove it from screen after collection
+                sun.collectedFromNetwork()  // Remove it from screen after collection
 
-            // Add sun points to the player who obtained the sun
-            if(senderId == FirebaseAuth.getInstance().currentUser!!.uid) {
-                val amount = event.getLong("amount")?.toInt() ?: return
-                addSunPoints(amount, sunId)
+                // Add sun points to the player who obtained the sun
+                if (senderId == FirebaseAuth.getInstance().currentUser!!.uid) {
+                    val amount = event.getLong("amount")?.toInt() ?: return
+                    addSunPoints(amount, sunId)
+                }
             }
-        }
 
-        if (type == "GAME_ENDED") {
-            endGame()
+            "GAME_ENDED" -> {
+                endGame()
+            }
         }
     }
 
@@ -765,10 +782,9 @@ class GameActivity : AppCompatActivity() {
         addEvent(event)  // Only host sends this event
     }
 
-    fun sendRequestCollectSunEvent(amount: Int, sunId: String) {
+    fun sendRequestCollectSunEvent(sunId: String) {
         val event = hashMapOf(
             "type" to "REQUEST_COLLECT_SUN",
-            "amount" to amount,
             "sunId" to sunId,
             "senderId" to FirebaseAuth.getInstance().currentUser!!.uid,
             "timestamp" to FieldValue.serverTimestamp()

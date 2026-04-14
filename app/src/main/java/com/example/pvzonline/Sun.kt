@@ -7,12 +7,11 @@ import java.util.UUID
 
 class Sun(
     private val parent: FrameLayout,
-    private val onCollected: (amount: Int, id: String) -> Unit,
+    private val onCollected: (id: String) -> Unit,
     private val id: String = ""
 ) {
 
     val imageView = ImageView(parent.context)
-    private val value = 25
 
     init {
         imageView.setImageResource(R.drawable.sun)
@@ -57,7 +56,7 @@ class Sun(
             .setDuration(200)
             .withEndAction {
                 parent.removeView(imageView)
-                onCollected(value, id)
+                onCollected(id)
             }
             .start()
     }

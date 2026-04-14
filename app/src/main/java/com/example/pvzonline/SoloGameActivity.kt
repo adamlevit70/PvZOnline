@@ -40,6 +40,7 @@ class SoloGameActivity : AppCompatActivity() {
     private val plantMatrix = Array(rows) { arrayOfNulls<Plant>(cols) }
     val zombiesByRow = Array(rows) { mutableListOf<Zombie>() }
     private var sunPoints = 50
+    private val sunValue = 25
     private lateinit var sunCounterText: TextView
     private var tileHeight : Int = 0
     private var tileWidth : Int = 0
@@ -195,7 +196,7 @@ class SoloGameActivity : AppCompatActivity() {
 
     private fun spawnSun(sunId: String, startX: Float, startY: Float, targetY: Float) {
         // Create Sun class which will add to the total sun points when obtained
-        val sun = Sun(gameLayout, ::addSunPoints) // ID is not used in singleplayer
+        val sun = Sun(gameLayout, ::onCollectedSun) // ID is not used in singleplayer
 
         // Spawn sun at random X pos and set its target when falls
         gameLayout.post {
@@ -203,7 +204,11 @@ class SoloGameActivity : AppCompatActivity() {
         }
     }
 
-    private fun addSunPoints(amount: Int, id: String? = null) {
+
+    private fun onCollectedSun(sunId: String) {
+        addSunPoints(sunValue)
+    }
+    private fun addSunPoints(amount: Int) {
         sunPoints += amount
         updateSunUI()
     }
