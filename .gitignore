@@ -32,9 +32,6 @@ out/
 *.jks
 *.keystore
 
-# Google Services (Firebase)
-google-services.json
-
 # Android Profiling
 *.hprof
 
