@@ -22,6 +22,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
+import kotlin.math.exp
 
 class GameActivity : AppCompatActivity() {
 
@@ -60,6 +61,7 @@ class GameActivity : AppCompatActivity() {
     private var tileHeight : Int = 0
     private var tileWidth : Int = 0
     private var gameEndedLocally : Boolean = false
+    private var expectedXp = 0
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -467,7 +469,7 @@ class GameActivity : AppCompatActivity() {
         zombieImage.post(runnable)
     }
 
-    private fun endGame() {
+    private fun endGame(xpGain: Int) {
         if(gameEndedLocally) return  // Avoid double calls
         gameEndedLocally = true
 
@@ -475,6 +477,16 @@ class GameActivity : AppCompatActivity() {
             for (plant in row) {
                 plant?.pause()
             }
+        }
+
+        if(xpGain > 0) {
+            // Get current user and give it XP for the game
+            val auth = FirebaseAuth.getInstance()
+            val userRef = FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(auth.currentUser.toString())
+
+            userRef.update("xp", FieldValue.increment(xpGain.toLong()))
         }
 
         // Disabling all buttons
@@ -591,6 +603,8 @@ class GameActivity : AppCompatActivity() {
                 val zombie = findZombieById(zombieId) ?: return
                 zombie.dead()
                 removeZombie(zombie)
+
+                expectedXp++
             }
 
             "SPAWN_SUN" -> {
@@ -634,7 +648,9 @@ class GameActivity : AppCompatActivity() {
             }
 
             "GAME_ENDED" -> {
-                endGame()
+                val expectedXp = event.getString("expectedXp")?.toInt() ?: return
+
+                endGame(expectedXp)
             }
         }
     }
@@ -810,6 +826,7 @@ class GameActivity : AppCompatActivity() {
     fun sendGameEndedEvent() {
         val event = hashMapOf(
             "type" to "GAME_ENDED",
+            "expectedXp" to expectedXp,
             "timestamp" to FieldValue.serverTimestamp()
         )
 
