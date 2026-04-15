@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.View
 import android.widget.FrameLayout
 import android.widget.GridLayout
 import android.widget.ImageView
@@ -60,6 +61,12 @@ class GameActivity : AppCompatActivity() {
     private var sunPoints = 50
     private val sunValue = 25
     private lateinit var sunCounterText: TextView
+
+    private lateinit var gameOverLayout: android.widget.LinearLayout
+    private lateinit var xpGrantedText: TextView
+    private lateinit var levelUpText: TextView
+    private lateinit var returnToMenuButton: android.widget.Button
+
     private var tileHeight : Int = 0
     private var tileWidth : Int = 0
     private var gameEndedLocally : Boolean = false
@@ -95,6 +102,18 @@ class GameActivity : AppCompatActivity() {
         // Setup game
         setupPlantPicker()
         updateSunUI()
+
+        gameOverLayout = findViewById(R.id.gameOverLayout)
+        xpGrantedText = findViewById(R.id.xpGrantedText)
+        levelUpText = findViewById(R.id.levelUpText)
+        returnToMenuButton = findViewById(R.id.returnToMenuButton)
+
+        returnToMenuButton.setOnClickListener {
+            val intent = android.content.Intent(this, NavigationActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+
         createBoard()
 
         // Start listeners for the other player's actions
@@ -486,25 +505,52 @@ class GameActivity : AppCompatActivity() {
         if(xpGain > 0) {
             // Get current user and give it XP for the game
             val auth = FirebaseAuth.getInstance()
-            val userRef = FirebaseFirestore.getInstance()
-                .collection("users")
-                .document(auth.currentUser.toString())
+            val userId = auth.currentUser?.uid ?: return
+            val userRef = db.collection("users").document(userId)
 
-            userRef.update("xp", FieldValue.increment(xpGain.toLong()))
+            db.runTransaction { transaction ->
+                val snapshot = transaction.get(userRef)
+                val user = snapshot.toObject(MyUser::class.java) ?: MyUser()
+
+                val newXp = user.xp + xpGain
+                var currentLevel = user.level
+                var xpNeeded = (50 * Math.pow(currentLevel.toDouble(), 1.5)).toInt()
+
+                var leveledUp = false
+                var tempXp = newXp
+                while (tempXp >= xpNeeded) {
+                    tempXp -= xpNeeded
+                    currentLevel++
+                    xpNeeded = (50 * Math.pow(currentLevel.toDouble(), 1.5)).toInt()
+                    leveledUp = true
+                }
+
+                transaction.update(userRef, "xp", tempXp)
+                transaction.update(userRef, "level", currentLevel)
+
+                leveledUp
+            }.addOnSuccessListener { leveledUp ->
+                if (leveledUp) {
+                    levelUpText.visibility = View.VISIBLE
+                }
+            }
         }
+
+        // Show progress over UI
+        xpGrantedText.text = "XP GRANTED: " + xpGain
+        gameOverLayout.visibility = android.view.View.VISIBLE
 
         // Disabling all buttons
         setCardsEnabled(false)
 
-        // Clean the picker select
+        // Clean the picker select after game ends
         selectedPlantType = null
 
         if(isHost) {
-            val db = FirebaseFirestore.getInstance()
-
             // Deleting the room events after game ended
             db.collection("rooms")
                 .document(roomCode)
+                .delete()
         }
     }
 
