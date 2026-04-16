@@ -671,14 +671,13 @@ class GameActivity : AppCompatActivity() {
                 if (isHost) {
                     val senderId = event.getString("senderId") ?: return  // Event must have a sender
 
-                    val amount = sunValue
                     val sunId = event.getString("sunId") ?: return
 
                     // Remove it from the screen to avoid duplicate collection
                     val sun = sunsById.remove(sunId) ?: return
                     sun.collectedFromNetwork()
 
-                    sendSunCollectedEvent(sunId, amount, senderId)  // Approve sun collection
+                    sendSunCollectedEvent(sunId, senderId)  // Approve sun collection
                 }
             }
 
@@ -692,7 +691,7 @@ class GameActivity : AppCompatActivity() {
 
                 // Add sun points to the player who obtained the sun
                 if (senderId == FirebaseAuth.getInstance().currentUser!!.uid) {
-                    val amount = event.getLong("amount")?.toInt() ?: return
+                    val amount = sunValue
                     addSunPoints(amount, sunId)
                 }
             }
@@ -856,12 +855,11 @@ class GameActivity : AppCompatActivity() {
         addEvent(event)
     }
 
-    fun sendSunCollectedEvent(sunId: String, amount: Int, senderId: String) {
+    fun sendSunCollectedEvent(sunId: String, senderId: String) {
         if (!isHost) return  // Cannot run this function if not authority
 
         val event = hashMapOf(
             "type" to "SUN_COLLECTED",
-            "amount" to amount,
             "sunId" to sunId,
             "senderId" to senderId,
             "timestamp" to FieldValue.serverTimestamp()
