@@ -21,6 +21,7 @@ import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -585,7 +586,10 @@ class GameActivity : AppCompatActivity() {
     // Each time new event appears, it will send it to handler
     private fun listenToEvents(roomCode: String) {
         roomsRef.document(roomCode)
+            // When listening, keep in mind only the last 20 events
             .collection("events")
+            .orderBy("timestamp", Query.Direction.ASCENDING)
+            .limitToLast(20)
             .addSnapshotListener { snapshots, _ ->
                 if (snapshots != null) {
                     for (change in snapshots.documentChanges) {
