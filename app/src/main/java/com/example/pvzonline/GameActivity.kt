@@ -440,6 +440,9 @@ class GameActivity : AppCompatActivity() {
         var speed = zombie.speed
         var isAttacking = false
 
+        // Track the last time the loop ran
+        var lastUpdateTime = System.currentTimeMillis()
+
         val runnable = object : Runnable {
             override fun run() {
                 if(zombie.isDead()) {
@@ -448,9 +451,17 @@ class GameActivity : AppCompatActivity() {
                 }
                 if (gameEndedLocally) return
 
+                val currentTime = System.currentTimeMillis()
+                val deltaTime = (currentTime - lastUpdateTime) / 1000f // Convert ms to seconds
+                lastUpdateTime = currentTime
+
                 // Zombie keeps moving as long as not attacking
                 if (!isAttacking) {
-                    zombieImage.x -= speed
+                    //zombieImage.x -= speed
+                    // Adjust speed based on time passed.
+                    // You may need to increase your base speed values (e.g., speed * 60)
+                    // if they were originally tuned for 16ms ticks.
+                    zombieImage.x -= (speed * 60f) * deltaTime
                 }
                 // End game condition (reached the end of the grid board) ONLY FOR AUTHORITY
                 if((zombieImage.x) < gameBoardGrid.x - 20f) {
@@ -586,10 +597,10 @@ class GameActivity : AppCompatActivity() {
     // Each time new event appears, it will send it to handler
     private fun listenToEvents(roomCode: String) {
         roomsRef.document(roomCode)
-            // When listening, keep in mind only the last 20 events
+            // When listening, keep in mind only the last 5 events
             .collection("events")
             .orderBy("timestamp", Query.Direction.ASCENDING)
-            .limitToLast(20)
+            .limitToLast(5)
             .addSnapshotListener { snapshots, _ ->
                 if (snapshots != null) {
                     for (change in snapshots.documentChanges) {
