@@ -5,12 +5,15 @@ import ShooterPlant
 import SunflowerPlant
 import android.content.pm.ActivityInfo
 import android.os.Bundle
+import android.view.View
 import android.widget.FrameLayout
 import android.widget.GridLayout
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -38,13 +41,22 @@ class SoloGameActivity : AppCompatActivity() {
     private lateinit var gameBoardGrid: GridLayout
     private lateinit var gameLayout: FrameLayout
     private val plantMatrix = Array(rows) { arrayOfNulls<Plant>(cols) }
+    private val plantImageMatrix = Array(rows) { arrayOfNulls<ImageView>(cols) }
     val zombiesByRow = Array(rows) { mutableListOf<Zombie>() }
     private var sunPoints = 50
     private val sunValue = 25
     private lateinit var sunCounterText: TextView
+
+    private lateinit var gameOverLayout: android.widget.LinearLayout
+    private lateinit var xpGrantedText: TextView
+    private lateinit var levelUpText: TextView
+    private lateinit var returnToMenuButton: android.widget.Button
+
     private var tileHeight : Int = 0
     private var tileWidth : Int = 0
     private var gameEnded : Boolean = false
+    private var expectedXp = 0
+    private var totalZombiesSpawned = 0
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -71,6 +83,17 @@ class SoloGameActivity : AppCompatActivity() {
         setupPlantPicker()
 
         updateSunUI()
+
+        gameOverLayout = findViewById(R.id.gameOverLayout)
+        xpGrantedText = findViewById(R.id.xpGrantedText)
+        levelUpText = findViewById(R.id.levelUpText)
+        returnToMenuButton = findViewById(R.id.returnToMenuButton)
+
+        returnToMenuButton.setOnClickListener {
+            val intent = android.content.Intent(this, NavigationActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
 
         createBoard()
     }
@@ -116,6 +139,20 @@ class SoloGameActivity : AppCompatActivity() {
         }
     }
 
+    // Enable or disable all cards at once
+    fun setCardsEnabled(enabled: Boolean) {
+        peashooterCard.isEnabled = enabled
+        sunflowerCard.isEnabled = enabled
+        wallnutCard.isEnabled = enabled
+        pumpfistCard.isEnabled = enabled
+
+        val alpha = if (enabled) 1f else 0.5f
+        peashooterCard.alpha = alpha
+        sunflowerCard.alpha = alpha
+        wallnutCard.alpha = alpha
+        pumpfistCard.alpha = alpha
+    }
+
     // Every time the sun value is updated, we will call this function
     private fun updateSunUI() {
         // Change UI text to the updated sun value
@@ -150,7 +187,9 @@ class SoloGameActivity : AppCompatActivity() {
                     tile.translationX = (100f - (row * 20))
 
                     val plantImage = tile.findViewById<ImageView>(R.id.plantImage)
-                    plantImage.elevation = row.toFloat()
+                    plantImage.elevation = row.toFloat() + 1f // Slightly higher than zombies to be visible when placing
+
+                    plantImageMatrix[row][col] = plantImage
 
                     tile.setOnClickListener {
                         placePlant(plantImage, row, col)
@@ -170,9 +209,19 @@ class SoloGameActivity : AppCompatActivity() {
         // As long as the game runs, keep spawning zombies
         lifecycleScope.launch {
             while(!gameEnded) {
-                val spawnDelay = (4000..5000).random()
+                // Initial delay is 7-8 seconds.
+                // Every 8 zombies spawned, we reduce the delay by 500ms.
+                // We cap the minimum delay to 1.5 - 2.5 seconds to keep it playable.
+                val baseMin = 7000L
+                val baseMax = 8000L
+                val reduction = (totalZombiesSpawned / 8) * 500L
+                
+                val minDelay = maxOf(1500L, baseMin - reduction)
+                val maxDelay = maxOf(2500L, baseMax - reduction)
+
+                val spawnDelay = (minDelay..maxDelay).random()
                 val spawnRow = (0..4).random()
-                delay(spawnDelay.toLong())
+                delay(spawnDelay)
                 spawnZombie(spawnRow)
             }
         }
@@ -189,7 +238,7 @@ class SoloGameActivity : AppCompatActivity() {
                 val targetY = gameBoardGrid.y + gameBoardGrid.height - 200f
 
                 spawnSun(sunId, randomX, 0f, targetY)
-                delay((3000..6000).random().toLong())
+                delay((5000..8000).random().toLong())
             }
         }
     }
@@ -216,6 +265,10 @@ class SoloGameActivity : AppCompatActivity() {
     private fun placePlant(plantImage: ImageView, row: Int, col: Int) {
         // Place plant on tile only if available
         if(plantMatrix[row][col] == null && selectedPlantType != null) {
+            val type = selectedPlantType ?: return
+            val cost = getCost(type)
+            if (sunPoints < cost) return
+
             val newPlant = createPlantByType(plantImage)
 
             // Trying to place the plant on the tile, if could create
@@ -226,6 +279,13 @@ class SoloGameActivity : AppCompatActivity() {
                 plantImage.visibility = ImageView.VISIBLE
 
                 newPlant.start(row)
+
+                // Clean the picker select after click
+                changePlantCardAlpha(peashooterCard, false)
+                changePlantCardAlpha(sunflowerCard, false)
+                changePlantCardAlpha(wallnutCard, false)
+                changePlantCardAlpha(pumpfistCard, false)
+                selectedPlantType = null
             }
         }
     }
@@ -285,13 +345,6 @@ class SoloGameActivity : AppCompatActivity() {
                 )
             }
         }
-
-        changePlantCardAlpha(peashooterCard, false)
-        changePlantCardAlpha(sunflowerCard, false)
-        changePlantCardAlpha(wallnutCard, false)
-        changePlantCardAlpha(pumpfistCard, false)
-        selectedPlantType = null
-        
         return newPlant
     }
 
@@ -315,12 +368,17 @@ class SoloGameActivity : AppCompatActivity() {
                 tileHeight * 2
             )
 
-            elevation = row.toFloat()  // lower the y pos, higher the layer order
+            elevation = row.toFloat()  // The lower the y pos, the higher the layer order
+
+            // Avoid interruptions of zombies on plants
+            isClickable = false
+            isFocusable = false
         }
 
 
         val zombie = createZombieByType(zombieImage)
         zombiesByRow[row].add(zombie)
+        totalZombiesSpawned++
 
         gameLayout.addView(zombieImage)
 
@@ -340,8 +398,46 @@ class SoloGameActivity : AppCompatActivity() {
 
     // Sets the image of the zombie and creates an object according to the chosen zombie
     private fun createZombieByType(zombieImage: ImageView) : Zombie {
-        // FOR NOW, RANDOMLY SELECT THE ZOMBIE
-        val type = ZombieType.entries.random()
+        // Progression logic: harder zombies appear as more zombies spawn
+        val type = when {
+            totalZombiesSpawned < 5 -> ZombieType.REGULAR
+            totalZombiesSpawned < 12 -> {
+                // Mix in some Football zombies
+                if ((0..10).random() < 7) ZombieType.REGULAR else ZombieType.FOOTBALL
+            }
+            totalZombiesSpawned < 25 -> {
+                // Add Yeti and Jackson to the mix
+                val r = (0..10).random()
+                when {
+                    r < 4 -> ZombieType.REGULAR
+                    r < 7 -> ZombieType.FOOTBALL
+                    r < 9 -> ZombieType.JACKSON
+                    else -> ZombieType.YETI
+                }
+            }
+            totalZombiesSpawned < 45 -> {
+                // Gargantuar starts appearing
+                val r = (0..10).random()
+                when {
+                    r < 2 -> ZombieType.REGULAR
+                    r < 4 -> ZombieType.FOOTBALL
+                    r < 6 -> ZombieType.YETI
+                    r < 8 -> ZombieType.JACKSON
+                    else -> ZombieType.GARGANTUAR
+                }
+            }
+            else -> {
+                // High difficulty: mostly hard zombies
+                val r = (0..10).random()
+                when {
+                    r < 1 -> ZombieType.REGULAR
+                    r < 3 -> ZombieType.FOOTBALL
+                    r < 5 -> ZombieType.YETI
+                    r < 8 -> ZombieType.JACKSON
+                    else -> ZombieType.GARGANTUAR
+                }
+            }
+        }
 
         val id = UUID.randomUUID().toString()
 
@@ -352,7 +448,7 @@ class SoloGameActivity : AppCompatActivity() {
                     id,
                     zombieImage,
                     50,
-                    2f,
+                    1f,
                     1000,
                     100
                 )
@@ -363,7 +459,7 @@ class SoloGameActivity : AppCompatActivity() {
                     id,
                     zombieImage,
                     60,
-                    3f,
+                    1.75f,
                     1000,
                     400
                 )
@@ -374,7 +470,7 @@ class SoloGameActivity : AppCompatActivity() {
                     id,
                     zombieImage,
                     50,
-                    4f,
+                    2.25f,
                     800,
                     300
                 )
@@ -385,7 +481,7 @@ class SoloGameActivity : AppCompatActivity() {
                     id,
                     zombieImage,
                     80,
-                    2f,
+                    1.25f,
                     1200,
                     500
                 )
@@ -396,7 +492,7 @@ class SoloGameActivity : AppCompatActivity() {
                     id,
                     zombieImage,
                     90,
-                    1.5f,
+                    0.75f,
                     1500,
                     800
                 )
@@ -417,19 +513,28 @@ class SoloGameActivity : AppCompatActivity() {
         var speed = zombie.speed
         var isAttacking = false
 
+        // Track the last time the loop ran
+        var lastUpdateTime = System.currentTimeMillis()
+
         val runnable = object : Runnable {
             override fun run() {
                 if(zombie.isDead()) {
                     // After the zombie died, stop the loop and remove it from the list
                     zombiesByRow[row].remove(zombie)
+                    zombie.dead()
+                    expectedXp++
                     return
                 }
 
                 if (gameEnded) return
 
+                val currentTime = System.currentTimeMillis()
+                val deltaTime = (currentTime - lastUpdateTime) / 1000f // Convert ms to seconds
+                lastUpdateTime = currentTime
+
                 // Zombie moves as long as no plant in front of it
                 if (!isAttacking) {
-                    zombieImage.x -= speed
+                    zombieImage.x -= (speed * 60f) * deltaTime
                 }
 
                 // Ends game when one zombie reaches to finish line (after the last plant)
@@ -456,8 +561,9 @@ class SoloGameActivity : AppCompatActivity() {
                                 if(!zombie.isDead()) {
                                     zombie.attack(plant);
 
-                                    // When plant died, remove from the array
+                                    // When plant died, remove from the array and disappear from screen
                                     if (plant.hp <= 0) {
+                                        plant.dead()
                                         plantMatrix[row][col] = null
                                     }
 
@@ -479,6 +585,7 @@ class SoloGameActivity : AppCompatActivity() {
 
     // Handles the DEAD screen at the end of the game
     private fun endGame() {
+        if (gameEnded) return
         gameEnded = true
 
         // Pauses every plant so it will stop attacking zombies
@@ -487,6 +594,54 @@ class SoloGameActivity : AppCompatActivity() {
                 plant?.pause()
             }
         }
+
+        val xpGain = expectedXp
+        if(xpGain > 0) {
+            // Get current user and give it XP for the game
+            val auth = FirebaseAuth.getInstance()
+            val userId = auth.currentUser?.uid
+            if (userId != null) {
+                val db = FirebaseFirestore.getInstance()
+                val userRef = db.collection("users").document(userId)
+
+                db.runTransaction { transaction ->
+                    val snapshot = transaction.get(userRef)
+                    val user = snapshot.toObject(MyUser::class.java) ?: MyUser()
+
+                    val newXp = user.xp + xpGain
+                    var currentLevel = user.level
+                    var xpNeeded = (50 * Math.pow(currentLevel.toDouble(), 1.5)).toInt()
+
+                    var leveledUp = false
+                    var tempXp = newXp
+                    while (tempXp >= xpNeeded) {
+                        tempXp -= xpNeeded
+                        currentLevel++
+                        xpNeeded = (50 * Math.pow(currentLevel.toDouble(), 1.5)).toInt()
+                        leveledUp = true
+                    }
+
+                    transaction.update(userRef, "xp", tempXp)
+                    transaction.update(userRef, "level", currentLevel)
+
+                    leveledUp
+                }.addOnSuccessListener { leveledUp ->
+                    if (leveledUp) {
+                        levelUpText.visibility = View.VISIBLE
+                    }
+                }
+            }
+        }
+
+        // Show progress over UI
+        xpGrantedText.text = "XP GRANTED: " + xpGain
+        gameOverLayout.visibility = android.view.View.VISIBLE
+
+        // Disabling all buttons
+        setCardsEnabled(false)
+
+        // Clean the picker select after game ends
+        selectedPlantType = null
     }
 
 

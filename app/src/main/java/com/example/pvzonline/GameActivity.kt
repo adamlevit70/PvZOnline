@@ -72,6 +72,7 @@ class GameActivity : AppCompatActivity() {
     private var tileWidth : Int = 0
     private var gameEndedLocally : Boolean = false
     private var expectedXp = 0
+    private var totalZombiesSpawned = 0
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -210,7 +211,7 @@ class GameActivity : AppCompatActivity() {
                     tile.translationX = (100f - (row * 20))
 
                     val plantImage = tile.findViewById<ImageView>(R.id.plantImage)
-                    plantImage.elevation = row.toFloat()
+                    plantImage.elevation = row.toFloat() + 0.1f
 
                     plantImageMatrix[row][col] = plantImage  // Make plantImages accessible by row and col
 
@@ -234,15 +235,64 @@ class GameActivity : AppCompatActivity() {
     private fun startZombieSpawnGeneration() {
         lifecycleScope.launch {
             while(!gameEndedLocally) {
-                val spawnDelay = (6000..7000).random()
+                // Initial delay is 7-8 seconds.
+                // Every 8 zombies spawned, we reduce the delay by 500ms.
+                // We cap the minimum delay to 1.5 - 2.5 seconds to keep it playable.
+                val baseMin = 7000L
+                val baseMax = 8000L
+                val reduction = (totalZombiesSpawned / 8) * 500L
+
+                val minDelay = maxOf(1500L, baseMin - reduction)
+                val maxDelay = maxOf(2500L, baseMax - reduction)
+
+                val spawnDelay = (minDelay..maxDelay).random()
                 val spawnRow = (0..4).random()
-                delay(spawnDelay.toLong())
+                delay(spawnDelay)
 
                 // Picks randomly IDs and zombie types
                 val zombieId: String = UUID.randomUUID().toString()
-                val zombieTypeName: String = ZombieType.entries.random().toString()
+                
+                // Progression logic for zombie types
+                val type = when {
+                    totalZombiesSpawned < 5 -> ZombieType.REGULAR
+                    totalZombiesSpawned < 12 -> {
+                        if ((0..10).random() < 7) ZombieType.REGULAR else ZombieType.FOOTBALL
+                    }
+                    totalZombiesSpawned < 25 -> {
+                        val r = (0..10).random()
+                        when {
+                            r < 4 -> ZombieType.REGULAR
+                            r < 7 -> ZombieType.FOOTBALL
+                            r < 9 -> ZombieType.JACKSON
+                            else -> ZombieType.YETI
+                        }
+                    }
+                    totalZombiesSpawned < 45 -> {
+                        val r = (0..10).random()
+                        when {
+                            r < 2 -> ZombieType.REGULAR
+                            r < 4 -> ZombieType.FOOTBALL
+                            r < 6 -> ZombieType.YETI
+                            r < 8 -> ZombieType.JACKSON
+                            else -> ZombieType.GARGANTUAR
+                        }
+                    }
+                    else -> {
+                        val r = (0..10).random()
+                        when {
+                            r < 1 -> ZombieType.REGULAR
+                            r < 3 -> ZombieType.FOOTBALL
+                            r < 5 -> ZombieType.YETI
+                            r < 8 -> ZombieType.JACKSON
+                            else -> ZombieType.GARGANTUAR
+                        }
+                    }
+                }
+                
+                val zombieTypeName = type.toString()
 
                 sendSpawnZombieEvent(zombieId, zombieTypeName, spawnRow)
+                totalZombiesSpawned++
             }
         }
     }
@@ -271,7 +321,7 @@ class GameActivity : AppCompatActivity() {
         }
     }
 
-    private fun addSunPoints(amount: Int, id: String) {
+    private fun addSunPoints(amount: Int) {
         sunPoints += amount
         updateSunUI()
     }
@@ -296,7 +346,7 @@ class GameActivity : AppCompatActivity() {
                     Handler(Looper.getMainLooper()).postDelayed({
                         isPlacingOnCooldown = false
                         setCardsEnabled(true)
-                    }, 500)
+                    }, 750)
 
                     // Clean the picker select after click
                     selectedPlantType = null
@@ -377,7 +427,7 @@ class GameActivity : AppCompatActivity() {
                     id,
                     zombieImage,
                     50,
-                    2f,
+                    1f,
                     1000,
                     100,
                     ::zombieDamaged
@@ -389,7 +439,7 @@ class GameActivity : AppCompatActivity() {
                     id,
                     zombieImage,
                     60,
-                    3f,
+                    1.75f,
                     1000,
                     400,
                     ::zombieDamaged
@@ -401,7 +451,7 @@ class GameActivity : AppCompatActivity() {
                     id,
                     zombieImage,
                     50,
-                    4f,
+                    2.25f,
                     800,
                     300,
                     ::zombieDamaged
@@ -413,7 +463,7 @@ class GameActivity : AppCompatActivity() {
                     id,
                     zombieImage,
                     80,
-                    2f,
+                    1.25f,
                     1200,
                     500,
                     ::zombieDamaged
@@ -425,7 +475,7 @@ class GameActivity : AppCompatActivity() {
                     id,
                     zombieImage,
                     90,
-                    1.5f,
+                    0.75f,
                     1500,
                     800,
                     ::zombieDamaged
@@ -623,14 +673,13 @@ class GameActivity : AppCompatActivity() {
             "REQUEST_PLACE_PLANT" -> {
                 // HOST AUTHORITY (the host approves the placement)
                 if (isHost) {
-                    event.getString("senderId") ?: return  // Must have a sender
-
+                    val senderId = event.getString("senderId") ?: return
                     val row = event.getLong("row")?.toInt() ?: return
                     val col = event.getLong("col")?.toInt() ?: return
                     val plantTypeName = event.getString("plantType") ?: return
 
                     if (plantMatrix[row][col] == null) {
-                        sendApprovedPlacePlantEvent(row, col, plantTypeName)
+                        sendApprovedPlacePlantEvent(row, col, plantTypeName, senderId)
                     }
                 }
             }
@@ -639,6 +688,13 @@ class GameActivity : AppCompatActivity() {
                 val row = event.getLong("row")?.toInt() ?: return
                 val col = event.getLong("col")?.toInt() ?: return
                 val plantTypeName = event.getString("plantType") ?: return
+                val senderId = event.getString("senderId") ?: return
+
+                // Take out sun if this is the client that put it
+                if (senderId == FirebaseAuth.getInstance().currentUser!!.uid) {
+                    val cost = getCost(PlantType.valueOf(plantTypeName))
+                    addSunPoints(-cost)
+                }
 
                 placePlantFromNetwork(row, col, plantTypeName)
             }
@@ -707,7 +763,7 @@ class GameActivity : AppCompatActivity() {
                 // Add sun points to the player who obtained the sun
                 if (senderId == FirebaseAuth.getInstance().currentUser!!.uid) {
                     val amount = sunValue
-                    addSunPoints(amount, sunId)
+                    addSunPoints(amount)
                 }
             }
 
@@ -731,10 +787,6 @@ class GameActivity : AppCompatActivity() {
 
             val newPlant = createPlantByType(plantImage, plantTypeName) ?: return@post
 
-            // TEMP: Both players lose suns
-            //val cost = getCost(selectedPlantType!!)
-            //addSunPoints(-cost)
-
             plantMatrix[row][col] = newPlant
             plantImage.visibility = ImageView.VISIBLE
             newPlant.start(row)
@@ -749,6 +801,8 @@ class GameActivity : AppCompatActivity() {
             layoutParams = FrameLayout.LayoutParams(tileWidth * 2, tileHeight * 2)
 
             elevation = row.toFloat()
+            isClickable = false
+            isFocusable = false
         }
 
         // Avoids duplicate by checking if a zombie with the same ID already exists in the row
@@ -797,12 +851,13 @@ class GameActivity : AppCompatActivity() {
         addEvent(event)
     }
 
-    private fun sendApprovedPlacePlantEvent(row: Int, col: Int, plantTypeName: String) {
+    private fun sendApprovedPlacePlantEvent(row: Int, col: Int, plantTypeName: String, senderId: String) {
         val event = hashMapOf(
             "type" to "PLACE_PLANT",
             "row" to row,
             "col" to col,
             "plantType" to plantTypeName,
+            "senderId" to senderId,
             "timestamp" to FieldValue.serverTimestamp()
         )
 

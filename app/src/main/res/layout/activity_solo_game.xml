@@ -168,4 +168,55 @@
         </LinearLayout>
 
     </LinearLayout>
+
+    <!-- GAME ENDED OVERLAY -->
+    <LinearLayout
+        android:id="@+id/gameOverLayout"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="@drawable/panel_bg"
+        android:elevation="30dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/gameOverText"
+            style="@style/RetroText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="GAME OVER"
+            android:textSize="36sp" />
+
+        <TextView
+            android:id="@+id/xpGrantedText"
+            style="@style/RetroText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="XP GRANTED: 0"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/levelUpText"
+            style="@style/RetroText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="LEVEL UP!"
+            android:textColor="#FFEB3B"
+            android:textSize="22sp"
+            android:visibility="gone" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/returnToMenuButton"
+            style="@style/RetroButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="RETURN TO MENU" />
+    </LinearLayout>
+
 </FrameLayout>

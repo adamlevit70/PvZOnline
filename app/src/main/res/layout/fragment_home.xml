@@ -26,15 +26,16 @@
         style="@style/RetroText"
         android:textSize="20dp"
         android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="20dp" />
+        android:layout_marginBottom="15dp" />
 
     <!-- Start game button -->
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnStartGame"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="START GAME"
-        style="@style/RetroButton" />
+        android:text="SOLO MODE"
+        style="@style/RetroButton"
+        android:layout_margin="10dp" />
 
     <!-- Host game button -->
     <androidx.appcompat.widget.AppCompatButton
