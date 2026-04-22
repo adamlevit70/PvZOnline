@@ -337,7 +337,7 @@ class SoloGameActivity : AppCompatActivity() {
                 MeleePlant(
                     plantImage,
                     100,
-                    750,
+                    1500,
                     100,
                     gameLayout,
                     ::getClosestZombieInFront,

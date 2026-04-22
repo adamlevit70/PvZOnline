@@ -21,11 +21,6 @@
             android:name=".WaitingRoomActivity"
             android:exported="false" />
 
-        <receiver
-            android:name=".ReminderReceiver"
-            android:enabled="true"
-            android:exported="true" />
-
         <activity
             android:name=".AuthActivity"
             android:exported="true">
