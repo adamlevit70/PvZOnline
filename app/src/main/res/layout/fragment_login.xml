@@ -9,6 +9,7 @@
 
     <!-- Title -->
     <TextView
+        android:id="@+id/loginTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         style="@style/RetroText"
@@ -41,12 +42,12 @@
 
     <!-- Login Button -->
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/loginBtn"
+        android:id="@+id/submitLoginBtn"
         style="@style/RetroButton"
         android:layout_width="200dp"
         android:layout_height="40dp"
         android:layout_marginTop="16dp"
-        android:text="Login"
+        android:text="Submit"
         android:textSize="15dp" />
 
 </LinearLayout>

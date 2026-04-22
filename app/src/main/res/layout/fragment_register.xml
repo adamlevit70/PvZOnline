@@ -64,11 +64,11 @@
 
     <!-- Register Button -->
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/registerBtn"
+        android:id="@+id/submitRegisterBtn"
         style="@style/RetroButton"
         android:layout_width="200dp"
         android:layout_height="40dp"
         android:layout_marginTop="16dp"
-        android:text="Register"
+        android:text="Submit"
         android:textSize="15dp" />
 </LinearLayout>

@@ -19,7 +19,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class NavigationActivity : AppCompatActivity() {
 
-    private lateinit var bottomNavigationView: BottomNavigationView
+    private lateinit var mainBottomNav: BottomNavigationView
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,8 +34,8 @@ class NavigationActivity : AppCompatActivity() {
             insets
         }
 
-        bottomNavigationView = findViewById(R.id.bottomNavigation)
-        bottomNavigationView.setOnItemSelectedListener { item ->
+        mainBottomNav = findViewById(R.id.mainBottomNav)
+        mainBottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> {
                     replaceFragment(HomeFragment())

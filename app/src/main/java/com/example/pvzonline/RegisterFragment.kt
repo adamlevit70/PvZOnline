@@ -16,9 +16,9 @@ class RegisterFragment : Fragment(R.layout.fragment_register) {
         val usernameInput = view.findViewById<EditText>(R.id.usernameInputRegister)
         val passwordInput = view.findViewById<EditText>(R.id.passwordInputRegister)
         val passwordConfirmInput = view.findViewById<EditText>(R.id.passwordConfirmInputRegister)
-        val registerBtn = view.findViewById<Button>(R.id.registerBtn)
+        val submitRegisterBtn = view.findViewById<Button>(R.id.submitRegisterBtn)
 
-        registerBtn.setOnClickListener {
+        submitRegisterBtn.setOnClickListener {
             val email = emailInput.text.toString().trim()
             val username = usernameInput.text.toString().trim()
             val password = passwordInput.text.toString().trim()
