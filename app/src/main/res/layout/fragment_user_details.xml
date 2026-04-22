@@ -7,58 +7,68 @@
     android:orientation="vertical"
     tools:context=".UserDetailsFragment">
 
-    <TextView
-        android:id="@+id/userEmail"
-        style="@style/RetroText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Email: "
-        android:textColor="#FFD54F" />
-
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp">
+        android:background="@drawable/details_border_bg"
+        android:gravity="center"
+        android:orientation="vertical">
 
         <TextView
-            android:id="@+id/userLevel"
+            android:id="@+id/userEmail"
             style="@style/RetroText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="12dp"
-            android:text="Level: "
+            android:text="Email: "
             android:textColor="#FFD54F" />
 
-        <TextView
-            android:id="@+id/userXp"
-            style="@style/RetroText"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="12dp"
-            android:text="XP: "
-            android:textColor="#FFD54F" />
-    </LinearLayout>
+            android:layout_marginTop="16dp">
 
+            <TextView
+                android:id="@+id/userLevel"
+                style="@style/RetroText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="12dp"
+                android:text="Level: "
+                android:textColor="#FFD54F" />
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp">
+            <TextView
+                android:id="@+id/userXp"
+                style="@style/RetroText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="12dp"
+                android:text="XP: "
+                android:textColor="#FFD54F" />
+        </LinearLayout>
 
-        <TextView
-            style="@style/RetroText"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Username: "
-            android:textColor="#FFD54F" />
+            android:layout_marginTop="16dp">
 
-        <EditText
-            android:id="@+id/changeUsernameInput"
-            style="@style/RetroInput"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="#FFFDE7" />
+            <TextView
+                style="@style/RetroText"
+                android:id="@+id/usernameLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Username: "
+                android:textColor="#FFD54F"
+                android:layout_marginTop="5dp"/>
+
+            <EditText
+                android:id="@+id/changeUsernameInput"
+                style="@style/RetroInput"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFDE7"
+                android:textSize="25dp"
+                />
+        </LinearLayout>
     </LinearLayout>
 
 

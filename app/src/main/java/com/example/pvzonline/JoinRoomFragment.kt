@@ -19,6 +19,7 @@ class JoinRoomFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val returnToHome = view.findViewById<Button>(R.id.returnToHome)
         val joinRoomBtn = view.findViewById<Button>(R.id.joinRoomBtn)
         val roomCodeInput = view.findViewById<TextView>(R.id.roomCodeInput)
 
@@ -32,6 +33,11 @@ class JoinRoomFragment : Fragment() {
 
             val auth = FirebaseAuth.getInstance()
             joinRoom(code, auth.currentUser!!.uid)
+        }
+
+        // Run the function to return to HomeFragment
+        returnToHome.setOnClickListener {
+            (activity as? NavigationActivity)?.returnToHome()
         }
     }
 

@@ -61,6 +61,10 @@ class NavigationActivity : AppCompatActivity() {
             .commit()
     }
 
+    fun returnToHome() {
+        replaceFragment(HomeFragment())
+    }
+
     fun switchToJoinRoomFragment() {
         replaceFragment(JoinRoomFragment())
     }
