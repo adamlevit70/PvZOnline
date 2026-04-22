@@ -26,12 +26,6 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
     }
 
     private fun onLoginClicked(email: String, password: String) {
-
-        /*
-        // Built for testing
-        (activity as? AuthActivity)?.loginUser("a@gmail.com", "123456")
-        */
-
         // Check if email and username fields are filled
         if(email.isEmpty() || password.isEmpty()) {
             Toast.makeText(requireContext(), "Please enter all fields", Toast.LENGTH_SHORT).show()
