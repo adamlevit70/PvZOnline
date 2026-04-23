@@ -55,7 +55,6 @@ class UserDetailsFragment : Fragment() {
 
         saveChangesBtn.setOnClickListener {
             val username = changeUsernameInput.text.toString()
-            //val email = emailUser.text.toString()
 
             val myUser = MyUser(username, level, xp)
             db.collection("users").document(user.uid).set(myUser)

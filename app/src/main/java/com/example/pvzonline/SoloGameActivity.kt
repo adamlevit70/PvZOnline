@@ -42,7 +42,7 @@ class SoloGameActivity : AppCompatActivity() {
     private lateinit var gameLayout: FrameLayout
     private val plantMatrix = Array(rows) { arrayOfNulls<Plant>(cols) }
     private val plantImageMatrix = Array(rows) { arrayOfNulls<ImageView>(cols) }
-    val zombiesByRow = Array(rows) { mutableListOf<Zombie>() }
+    private val zombiesByRow = Array(rows) { mutableListOf<Zombie>() }
     private var sunPoints = 50
     private val sunValue = 25
     private lateinit var sunCounterText: TextView

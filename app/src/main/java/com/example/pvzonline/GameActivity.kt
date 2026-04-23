@@ -56,9 +56,9 @@ class GameActivity : AppCompatActivity() {
     private lateinit var gameBoardGrid: GridLayout
     private lateinit var gameLayout: FrameLayout
     private val plantMatrix = Array(rows) { arrayOfNulls<Plant>(cols) }
-    val plantImageMatrix = Array(rows) { arrayOfNulls<ImageView>(cols) }
-    val zombiesByRow = Array(rows) { mutableListOf<Zombie>() }  // Holds zombies objects by row
-    val sunsById = mutableMapOf<String, Sun>()  // Holds suns objects by ID
+    private val plantImageMatrix = Array(rows) { arrayOfNulls<ImageView>(cols) }
+    private val zombiesByRow = Array(rows) { mutableListOf<Zombie>() }  // Holds zombies objects by row
+    private val sunsById = mutableMapOf<String, Sun>()  // Holds suns objects by ID
     private var sunPoints = 50
     private val sunValue = 25
     private lateinit var sunCounterText: TextView
