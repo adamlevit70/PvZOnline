@@ -1,13 +1,11 @@
 package com.example.pvzonline
 
-import MeleePlant
 import ShooterPlant
 import SunflowerPlant
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.GridLayout
@@ -25,7 +23,6 @@ import com.google.firebase.firestore.Query
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
-import kotlin.math.exp
 
 class GameActivity : AppCompatActivity() {
 
@@ -375,7 +372,7 @@ class GameActivity : AppCompatActivity() {
                 plantImage.setImageResource(R.drawable.plant_sunflower)
                 SunflowerPlant(
                     plantImage,
-                    5000,
+                    8500,
                     100,
                     gameLayout,
                     ::sendSpawnSunEvent

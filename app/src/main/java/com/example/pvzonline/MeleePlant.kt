@@ -1,7 +1,7 @@
+package com.example.pvzonline
+
 import android.widget.FrameLayout
 import android.widget.ImageView
-import com.example.pvzonline.Plant
-import com.example.pvzonline.Zombie
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch

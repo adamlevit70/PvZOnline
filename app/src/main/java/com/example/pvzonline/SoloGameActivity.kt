@@ -1,6 +1,5 @@
 package com.example.pvzonline
 
-import MeleePlant
 import ShooterPlant
 import SunflowerPlant
 import android.content.pm.ActivityInfo
@@ -316,7 +315,7 @@ class SoloGameActivity : AppCompatActivity() {
                 plantImage.setImageResource(R.drawable.plant_sunflower)
                 SunflowerPlant(
                     plantImage,
-                    5000,
+                    8500,
                     100,
                     gameLayout,
                     ::spawnSun
