@@ -40,7 +40,6 @@ class SoloGameActivity : AppCompatActivity() {
     private lateinit var gameBoardGrid: GridLayout
     private lateinit var gameLayout: FrameLayout
     private val plantMatrix = Array(rows) { arrayOfNulls<Plant>(cols) }
-    private val plantImageMatrix = Array(rows) { arrayOfNulls<ImageView>(cols) }
     private val zombiesByRow = Array(rows) { mutableListOf<Zombie>() }
     private var sunPoints = 50
     private val sunValue = 25
@@ -187,8 +186,6 @@ class SoloGameActivity : AppCompatActivity() {
 
                     val plantImage = tile.findViewById<ImageView>(R.id.plantImage)
                     plantImage.elevation = row.toFloat() + 1f // Slightly higher than zombies to be visible when placing
-
-                    plantImageMatrix[row][col] = plantImage
 
                     tile.setOnClickListener {
                         placePlant(plantImage, row, col)
