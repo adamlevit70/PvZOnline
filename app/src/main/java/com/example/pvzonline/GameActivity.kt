@@ -504,10 +504,7 @@ class GameActivity : AppCompatActivity() {
 
                 // Zombie keeps moving as long as not attacking
                 if (!isAttacking) {
-                    //zombieImage.x -= speed
-                    // Adjust speed based on time passed.
-                    // You may need to increase your base speed values (e.g., speed * 60)
-                    // if they were originally tuned for 16ms ticks.
+                    // Ensuring consistent movement speed across devices (multiplying by 60 because speed is speed per frame)
                     zombieImage.x -= (speed * 60f) * deltaTime
                 }
                 // End game condition (reached the end of the grid board) ONLY FOR AUTHORITY
