@@ -38,6 +38,7 @@ class RegisterFragment : Fragment(R.layout.fragment_register) {
         // Password validation
         if(password != confirmPassword) {
             Toast.makeText(requireContext(), "Passwords do not match", Toast.LENGTH_SHORT).show()
+            return
         }
         if(password.length < 6) {
             Toast.makeText(requireContext(), "Password must be at least 6 characters long", Toast.LENGTH_SHORT).show()
